@@ -1,0 +1,600 @@
+import { useState } from "react"
+
+const SCENE_PROMPT = `You are the Veo-3 Prompt Virtuoso, acting as a creative director. Break a video concept into a sequence of distinct, shootable scenes — as many as the concept genuinely requires to tell the story properly. Do not cap or pad the count artificially.
+
+For each scene define:
+- An evocative title
+- What happens in this shot (action, movement, mood — 1-2 sentences)
+- Which named characters appear
+- Which named location it takes place in
+
+Output raw JSON array only — no backticks, no preamble, no commentary, just the array:
+[{"number":1,"title":"Scene title","description":"What happens","characters":["Character name"],"location":"Location name"}]`
+
+const CHAR_SHEETS_PROMPT = `You are the Veo-3 Prompt Virtuoso. Given a concept and scene breakdown, generate Character Master Sheets — the visual source of truth for every shot.
+
+For each significant recurring character:
+- Full physical description: age, build, skin tone, face shape, eyes, hair (style, colour, texture), distinguishing marks
+- Clothing: specific garments, fabrics, textures, colours, accessories — enough to be consistent across shots
+- Vocal profile: tone, pitch, accent, speech rhythm
+
+Output raw JSON array only — no backticks, no preamble:
+[{"name":"...","sheet":"full descriptive paragraph"}]`
+
+const LOC_SHEETS_PROMPT = `You are the Veo-3 Prompt Virtuoso. Given a concept and scene breakdown, generate Location Master Sheets — the visual source of truth for every shot.
+
+For each significant recurring setting:
+- Physical materials: floor, walls, ceiling, surfaces and textures
+- Lighting: sources (natural/artificial), direction, colour temperature, quality (hard/soft)
+- Mood and atmosphere, key objects, set dressing details
+- Ambient soundscape: what you'd hear standing in this space
+
+Output raw JSON array only — no backticks, no preamble:
+[{"name":"...","sheet":"full descriptive paragraph"}]`
+
+const SHOT_PROMPT = `You are the Veo-3 Prompt Virtuoso — a meticulous film director and cinematographer. Using the provided master sheets as your visual source of truth, generate a complete cinematic shot prompt for one scene.
+
+PRINCIPLES:
+1. Specificity over vagueness in every single detail
+2. Frame-bound description only — what is visible and audible within this one shot
+3. One continuous camera take — not a summary, a moment
+
+CRITICAL — START & END FRAME PROMPTS (for image generation only):
+These are standalone image prompts for Midjourney/Flux/Imagen. They describe ONE FROZEN MOMENT each — no motion, no "begins to", no transitions, no camera movement. Just the exact visual state of that single frame.
+
+start_frame_prompt: The EXACT visual state of frame 1. Fully self-contained. Include: subject pose + exact position in frame + expression, lighting (direction, quality, colour temperature, source type), lens + focal length, depth of field, compositional rule, colour palette with hex codes, mood keywords, visual style references. Must generate the correct image with zero additional prompting.
+
+end_frame_prompt: The EXACT visual state of the last frame after all action resolves. Same format and depth. The difference between start and end must clearly show the shot's arc (e.g. start: mug halfway to lips, end: mug tipped on its side, coffee spilled).
+
+OUTPUT — two sections separated by ---JSON---:
+
+SECTION 1 — THE VIDEO PROMPT (comprehensive flowing paragraph):
+This is the full generative film script that feeds the video model. Weave EVERYTHING together in one rich paragraph: Cinematic Hook (mood + style + shot type in one powerful opening sentence) -> Subject & Action (describe exactly what happens using precise verbs) -> Lighting Evolution (how light shifts during the shot) -> Camera Choreography (dolly, pan, push-in, static, handheld — with emotional intent and compositional purpose) -> Ambiance & Audio (specific diegetic sounds: footsteps, clinking glass, distant sirens; exact dialogue lines; music cues if any). Never leave audio, motion, or camera movement for the JSON — it ALL belongs here.
+
+---JSON---
+
+SECTION 2 (raw JSON only — no backticks, no preamble — these are image prompts, strictly static):
+{"start_frame_prompt":"...","end_frame_prompt":"...","scene_description":"0-2s: ... 2-5s: ... 5-8s: ...","visual_style":"style keywords and cinematic references","camera_movement":"choreography + intent + framing","main_subject":"subject and action","background_setting":"environment with textures, mood, key objects","lighting_mood":"lighting setup and emotional tone","audio_cue":"ambient layers, specific SFX, music bed","color_palette":"dominant colours with hex codes","dialog":"exact dialogue or None","subtitles":"ON or OFF"}`
+
+function parseJSON(raw) {
+  const s = raw.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim()
+  try { return JSON.parse(s) } catch {}
+  const arr = s.match(/\[[\s\S]*?\]/)
+  if (arr) try { return JSON.parse(arr[0]) } catch {}
+  const arrOpen = s.match(/\[[\s\S]*/)
+  if (arrOpen) {
+    const closes = ["]", '"}]', ']}]', '"]}]', '"]}', ']}"', '"]}"', '}]', ']}', '"}]}', '"]}]}', '"]}"]']
+    for (const end of closes) {
+      try { return JSON.parse(arrOpen[0] + end) } catch {}
+    }
+    const lastComma = arrOpen[0].lastIndexOf("},{")
+    if (lastComma >= 0) {
+      try { return JSON.parse(arrOpen[0].substring(0, lastComma + 1) + "]") } catch {}
+    }
+  }
+  const obj = s.match(/\{[\s\S]*\}/)
+  if (obj) try { return JSON.parse(obj[0]) } catch {}
+  const objOpen = s.match(/\{[\s\S]*/)
+  if (objOpen) {
+    const closes = ["}", '"}', '"]}', '"}]}', '"]}"}']
+    for (const end of closes) {
+      try { return JSON.parse(objOpen[0] + end) } catch {}
+    }
+  }
+  return null
+}
+
+function parseShot(raw) {
+  const parts = raw.split("---JSON---")
+  const text = parts[0]?.trim() || ""
+  let json = null
+  if (parts[1]) {
+    const r = parts[1].replace(/```json\n?/g, "").replace(/```\n?/g, "").trim()
+    try { json = JSON.parse(r) } catch {
+      const m = r.match(/\{[\s\S]*/)
+      if (m) {
+        const closes = ["}", '"}', '"]}', '"}]}', '"]}"}']
+        for (const end of closes) {
+          try { json = JSON.parse(m[0] + end); break } catch {}
+        }
+      }
+    }
+  }
+  return { text, json }
+}
+
+function Header({ step, onNewProject, projectName, setProjectName, onSave, onLoad, onDelete, savedProjects }) {
+  const [showLoad, setShowLoad] = useState(false)
+  const [msg, setMsg] = useState("")
+  const amber = "#B8942A"
+  const showMsg = (m) => { setMsg(m); setTimeout(() => setMsg(""), 1500) }
+  return (
+    <div style={{ padding: "14px 0", borderBottom: "1px solid var(--color-border-primary)", marginBottom: 20 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ color: amber, fontSize: "1.25rem", fontWeight: 700 }}>&#9654;</span>
+          <div>
+            <div style={{ fontSize: "0.95rem", fontWeight: 700, letterSpacing: "0.04em", color: "var(--color-text-primary)", textTransform: "uppercase" }}>Veo 3 Prompt Virtuoso</div>
+            <div style={{ fontSize: "0.68rem", color: "var(--color-text-tertiary)" }}>Start / End Frame Edition</div>
+          </div>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {step > 1 && (
+            <button className="btn-ghost" onClick={onNewProject} style={{ background: "transparent", border: "1px solid var(--color-border-primary)", color: "var(--color-text-secondary)", padding: "6px 14px", borderRadius: 6, fontSize: "0.8rem", cursor: "pointer", fontFamily: "var(--font-sans)" }}>
+              &#8592; New Project
+            </button>
+          )}
+        </div>
+      </div>
+      <div style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 6 }}>
+        <input value={projectName} onChange={e => setProjectName(e.target.value)} placeholder="Project name..."
+          style={{ padding: "5px 10px", borderRadius: 6, border: "1px solid var(--color-border-primary)", background: "var(--color-background-secondary)", color: "var(--color-text-primary)", fontFamily: "var(--font-sans)", fontSize: "0.78rem", outline: "none", width: 180 }}
+          onFocus={e => e.target.style.borderColor = amber} onBlur={e => e.target.style.borderColor = "var(--color-border-primary)"} />
+        <button className="btn-primary" onClick={() => { onSave(); showMsg("Saved") }} disabled={!projectName.trim()}
+          style={{ background: amber, color: "#fff", border: "none", padding: "5px 14px", borderRadius: 6, fontSize: "0.75rem", fontWeight: 600, cursor: projectName.trim() ? "pointer" : "not-allowed", opacity: projectName.trim() ? 1 : 0.45, fontFamily: "var(--font-sans)" }}>Save</button>
+        <div style={{ position: "relative" }}>
+          <button className="btn-ghost" onClick={() => setShowLoad(!showLoad)} disabled={savedProjects.length === 0}
+            style={{ background: "transparent", border: "1px solid var(--color-border-primary)", color: "var(--color-text-secondary)", padding: "5px 14px", borderRadius: 6, fontSize: "0.75rem", cursor: savedProjects.length ? "pointer" : "not-allowed", opacity: savedProjects.length ? 1 : 0.45, fontFamily: "var(--font-sans)" }}>Load</button>
+          {showLoad && savedProjects.length > 0 && (
+            <div style={{ position: "absolute", top: "100%", right: 0, marginTop: 4, background: "var(--color-background-card)", border: "1px solid var(--color-border-primary)", borderRadius: 6, overflow: "hidden", zIndex: 10, minWidth: 180, boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}>
+              {savedProjects.map(p => (
+                <div key={p} onClick={() => { onLoad(p); setShowLoad(false); showMsg("Loaded") }} style={{ padding: "8px 12px", fontSize: "0.78rem", cursor: "pointer", fontFamily: "var(--font-sans)", color: "var(--color-text-primary)", borderBottom: "1px solid var(--color-border-primary)" }}
+                  onMouseEnter={e => e.target.style.background = "var(--color-background-secondary)"} onMouseLeave={e => e.target.style.background = "transparent"}>{p}</div>
+              ))}
+            </div>
+          )}
+        </div>
+        <button className="btn-ghost" onClick={() => { onDelete(); showMsg("Deleted") }} disabled={!projectName.trim()}
+          style={{ background: "transparent", border: "1px solid var(--color-border-danger)", color: "var(--color-text-danger)", padding: "5px 14px", borderRadius: 6, fontSize: "0.75rem", cursor: projectName.trim() ? "pointer" : "not-allowed", opacity: projectName.trim() ? 1 : 0.45, fontFamily: "var(--font-sans)" }}>Delete</button>
+        {msg && <span style={{ fontSize: "0.73rem", color: "var(--color-text-success)", marginLeft: 4 }}>{msg}</span>}
+      </div>
+    </div>
+  )
+}
+
+function Stepper({ step, loadMsg }) {
+  const steps = ["Concept", "Scenes", "Master Sheets", "Shot Prompts"]
+  const amber = "#B8942A"
+  return (
+    <div style={{ display: "flex", alignItems: "center", marginBottom: 20 }}>
+      {steps.map((label, i) => {
+        const num = i + 1; const done = step > num; const active = step === num
+        return (
+          <div key={i} style={{ display: "flex", alignItems: "center", flex: i < 3 ? 1 : "none" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <div style={{ width: 24, height: 24, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.7rem", fontWeight: 700, flexShrink: 0,
+                background: done ? amber : "transparent", border: done ? "2px solid " + amber : active ? "2px solid " + amber : "2px solid var(--color-border-secondary)", color: done ? "#fff" : active ? amber : "var(--color-text-tertiary)" }}>
+                {done ? "\u2713" : num}
+              </div>
+              <span style={{ fontSize: "0.75rem", fontWeight: active ? 600 : 400, color: done ? "var(--color-text-secondary)" : active ? amber : "var(--color-text-tertiary)" }}>{label}</span>
+            </div>
+            {i < 3 && <div style={{ flex: 1, height: 2, margin: "0 10px", background: done ? amber : "var(--color-border-secondary)" }} />}
+          </div>
+        )
+      })}
+      {loadMsg && <span style={{ marginLeft: "auto", fontSize: "0.75rem", color: "var(--color-text-secondary)", whiteSpace: "nowrap" }}>{loadMsg}</span>}
+    </div>
+  )
+}
+
+function ErrorBanner({ err, onDismiss }) {
+  if (!err) return null
+  return (
+    <div style={{ background: "var(--color-background-danger)", border: "1px solid var(--color-border-danger)", color: "var(--color-text-danger)", padding: "12px 16px", borderRadius: 8, marginBottom: 20, fontFamily: "var(--font-mono)", fontSize: "0.78rem", wordBreak: "break-word", whiteSpace: "pre-wrap", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
+      <span>{err}</span>
+      <button onClick={onDismiss} style={{ background: "transparent", border: "none", color: "var(--color-text-danger)", cursor: "pointer", fontSize: "1rem", lineHeight: 1, padding: 0, flexShrink: 0 }}>&#10005;</button>
+    </div>
+  )
+}
+
+function SheetPanel({ characters, locations }) {
+  const gridTwo = (characters.length > 1 || locations.length > 1)
+  const grid = gridTwo ? { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 } : { display: "flex", flexDirection: "column", gap: 16 }
+  return (
+    <div>
+      {characters.length > 0 && (
+        <div style={{ marginBottom: 24 }}>
+          <div style={{ fontSize: "0.78rem", fontWeight: 600, color: "var(--color-text-info)", textTransform: "uppercase", marginBottom: 12, letterSpacing: "0.04em" }}>Characters</div>
+          <div style={grid}>
+            {characters.map((c, i) => (
+              <div key={i} style={{ background: "var(--color-background-card)", border: "1px solid var(--color-border-primary)", borderRadius: 8, padding: 14 }}>
+                <div style={{ fontSize: "0.88rem", fontWeight: 600, color: "var(--color-text-primary)", marginBottom: 8 }}>{c.name}</div>
+                <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.75rem", color: "var(--color-text-secondary)", lineHeight: 1.8, whiteSpace: "pre-wrap" }}>{c.sheet}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      {locations.length > 0 && (
+        <div>
+          <div style={{ fontSize: "0.78rem", fontWeight: 600, color: "var(--color-text-secondary)", textTransform: "uppercase", marginBottom: 12, letterSpacing: "0.04em" }}>Locations</div>
+          <div style={grid}>
+            {locations.map((l, i) => (
+              <div key={i} style={{ background: "var(--color-background-card)", border: "1px solid var(--color-border-primary)", borderRadius: 8, padding: 14 }}>
+                <div style={{ fontSize: "0.88rem", fontWeight: 600, color: "var(--color-text-primary)", marginBottom: 8 }}>{l.name}</div>
+                <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.75rem", color: "var(--color-text-secondary)", lineHeight: 1.8, whiteSpace: "pre-wrap" }}>{l.sheet}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function CopyButton({ shotKey, label, copied, setCopied, text }) {
+  const active = copied === shotKey
+  return (
+    <button onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(text); setCopied(shotKey); setTimeout(() => setCopied(""), 2000) }}
+      style={{ background: "transparent", border: "1px solid " + (active ? "var(--color-border-success)" : "var(--color-border-primary)"), color: active ? "var(--color-text-success)" : "var(--color-text-secondary)", padding: "3px 10px", borderRadius: 4, fontSize: "0.72rem", cursor: "pointer", fontFamily: "var(--font-sans)" }}>
+      {active ? "✓ Copied" : label}
+    </button>
+  )
+}
+
+function LoadingDots() {
+  return (
+    <span style={{ display: "inline-flex", gap: 2 }}>
+      <span style={{ animation: "ld-dot 1.4s ease-in-out infinite", animationDelay: "0s" }}>.</span>
+      <span style={{ animation: "ld-dot 1.4s ease-in-out infinite", animationDelay: "0.22s" }}>.</span>
+      <span style={{ animation: "ld-dot 1.4s ease-in-out infinite", animationDelay: "0.44s" }}>.</span>
+    </span>
+  )
+}
+
+export default function App() {
+  const [step, setStep] = useState(1)
+  const [concept, setConcept] = useState("")
+  const [scenes, setScenes] = useState([])
+  const [characters, setCharacters] = useState([])
+  const [locations, setLocations] = useState([])
+  const [shots, setShots] = useState([])
+  const [busy, setBusy] = useState(false)
+  const [loadMsg, setLoadMsg] = useState("")
+  const [err, setErr] = useState("")
+  const [expanded, setExpanded] = useState(null)
+  const [tabs, setTabs] = useState({})
+  const [sheetsOpen, setSheetsOpen] = useState(false)
+  const [copied, setCopied] = useState("")
+  const [projectName, setProjectName] = useState("")
+  const [savedProjects, setSavedProjects] = useState(() => {
+    try { return Object.keys(JSON.parse(localStorage.getItem("vpv_projects") || "{}")) } catch { return [] }
+  })
+
+  const amber = "#B8942A"
+
+  const persist = (overrides = {}) => {
+    const name = projectName.trim()
+    if (!name) return
+    const projects = JSON.parse(localStorage.getItem("vpv_projects") || "{}")
+    const current = { step, concept, scenes, characters, locations, shots }
+    projects[name] = { ...current, ...overrides }
+    localStorage.setItem("vpv_projects", JSON.stringify(projects))
+    setSavedProjects(Object.keys(projects))
+  }
+
+  const loadProject = (name) => {
+    const projects = JSON.parse(localStorage.getItem("vpv_projects") || "{}")
+    const p = projects[name]
+    if (!p) return
+    setProjectName(name)
+    setStep(p.step || 1); setConcept(p.concept || ""); setScenes(p.scenes || [])
+    setCharacters(p.characters || []); setLocations(p.locations || []); setShots(p.shots || [])
+    setExpanded(null); setTabs({}); setSheetsOpen(false); setCopied(""); setErr("")
+  }
+
+  const deleteProject = () => {
+    const name = projectName.trim()
+    if (!name) return
+    const projects = JSON.parse(localStorage.getItem("vpv_projects") || "{}")
+    delete projects[name]
+    localStorage.setItem("vpv_projects", JSON.stringify(projects))
+    setSavedProjects(Object.keys(projects))
+    setProjectName("")
+  }
+
+  const resetAll = () => {
+    setStep(1); setConcept(""); setScenes([]); setCharacters([]); setLocations([])
+    setShots([]); setBusy(false); setLoadMsg(""); setErr(""); setExpanded(null)
+    setTabs({}); setSheetsOpen(false); setCopied(""); setProjectName("")
+  }
+
+  async function callAPI(system, userMsg, tokens = 8192) {
+    const res = await fetch("/api/deepseek/v1/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + import.meta.env.VITE_DEEPSEEK_API_KEY },
+      body: JSON.stringify({ model: "deepseek-chat", max_tokens: tokens, messages: [{ role: "system", content: system }, { role: "user", content: userMsg }] })
+    })
+    if (!res.ok) { const body = await res.text().catch(() => ""); throw new Error("HTTP " + res.status + ": " + (body || res.statusText)) }
+    const data = await res.json()
+    if (data.error) throw new Error(data.error.message || JSON.stringify(data.error))
+    const text = data.choices?.[0]?.message?.content?.trim()
+    if (!text) throw new Error("Empty response from API")
+    return text
+  }
+
+  const developScenes = async () => {
+    setBusy(true); setLoadMsg("Developing scenes"); setErr("")
+    try {
+      const raw = await callAPI(SCENE_PROMPT, concept)
+      const parsed = parseJSON(raw)
+      if (!parsed || !Array.isArray(parsed)) throw new Error("Scene parse failed (" + raw.length + " chars). Last 400:\n" + raw.slice(-400))
+      if (parsed.length === 0) throw new Error("No scenes returned from API")
+      setScenes(parsed)
+      setStep(2)
+      persist({ scenes: parsed, step: 2 })
+    } catch (e) { setErr(e.message) }
+    finally { setBusy(false); setLoadMsg("") }
+  }
+
+  const buildSheets = async () => {
+    setBusy(true); setErr("")
+    const sceneText = scenes.map(s => s.number + ". " + s.title + " - " + s.description + " (Characters: " + (s.characters || []).join(", ") + ", Location: " + s.location + ")").join("\n")
+    const userMsg = "CONCEPT:\n" + concept + "\n\nSCENES:\n" + sceneText
+    let finalChars = characters
+    let finalLocs = locations
+    try {
+      setLoadMsg("Building character sheets")
+      const rawChars = await callAPI(CHAR_SHEETS_PROMPT, userMsg, 8192)
+      const chars = parseJSON(rawChars)
+      if (!chars || !Array.isArray(chars) || chars.length === 0) throw new Error("Character sheet parse failed")
+      setCharacters(chars)
+      finalChars = chars
+    } catch (e) { setErr(e.message); setBusy(false); setLoadMsg(""); return }
+    try {
+      setLoadMsg("Building location sheets")
+      const rawLocs = await callAPI(LOC_SHEETS_PROMPT, userMsg, 8192)
+      const locs = parseJSON(rawLocs)
+      if (locs && Array.isArray(locs) && locs.length > 0) { setLocations(locs); finalLocs = locs }
+    } catch (e) { setErr("Location sheets unavailable: " + e.message) }
+    setStep(3)
+    persist({ characters: finalChars, locations: finalLocs, step: 3 })
+    setBusy(false); setLoadMsg("")
+  }
+
+  const goToSheets = () => {
+    if (characters.length > 0) { setStep(3) }
+    else { buildSheets() }
+  }
+
+  const generateAllShots = async () => {
+    setBusy(true); setErr("")
+    const initial = scenes.map((s, i) => ({ scene: s, status: i === 0 ? "loading" : "pending", text: "", json: null, errMsg: "" }))
+    setShots(initial)
+    setStep(4)
+    const charSheets = characters.map(c => "[CHARACTER: " + c.name + "]\n" + c.sheet).join("\n\n")
+    const locSheets = locations.map(l => "[LOCATION: " + l.name + "]\n" + l.sheet).join("\n\n")
+    const context = charSheets + "\n\n" + locSheets
+    for (let i = 0; i < scenes.length; i++) {
+      setLoadMsg("Generating shot " + (i + 1) + " of " + scenes.length)
+      setShots(prev => prev.map((s, idx) => idx === i ? { ...s, status: "loading", errMsg: "" } : s))
+      const s = scenes[i]
+      const userMsg = context + "\n\nSCENE " + s.number + " - " + s.title + "\n" + s.description + "\nCharacters: " + (s.characters || []).join(", ") + "\nLocation: " + s.location
+      try {
+        const raw = await callAPI(SHOT_PROMPT, userMsg)
+        const parsed = parseShot(raw)
+        setShots(prev => { const next = prev.map((sh, idx) => idx === i ? { ...sh, status: "done", text: parsed.text, json: parsed.json, errMsg: "" } : sh); persist({ shots: next, step: 4 }); return next })
+      } catch (e) {
+        setShots(prev => { const next = prev.map((sh, idx) => idx === i ? { ...sh, status: "error", errMsg: e.message } : sh); persist({ shots: next, step: 4 }); return next })
+      }
+    }
+    setBusy(false); setLoadMsg("")
+  }
+
+  const goToShots = () => {
+    if (shots.length > 0 && shots.some(s => s.status === "done")) { setStep(4) }
+    else { generateAllShots() }
+  }
+
+  const retryShot = async (i) => {
+    setShots(prev => prev.map((s, idx) => idx === i ? { ...s, status: "loading", errMsg: "" } : s))
+    setLoadMsg("Retrying shot " + (i + 1))
+    const charSheets = characters.map(c => "[CHARACTER: " + c.name + "]\n" + c.sheet).join("\n\n")
+    const locSheets = locations.map(l => "[LOCATION: " + l.name + "]\n" + l.sheet).join("\n\n")
+    const context = charSheets + "\n\n" + locSheets
+    const s = scenes[i]
+    const userMsg = context + "\n\nSCENE " + s.number + " - " + s.title + "\n" + s.description + "\nCharacters: " + (s.characters || []).join(", ") + "\nLocation: " + s.location
+    try {
+      const raw = await callAPI(SHOT_PROMPT, userMsg)
+      const parsed = parseShot(raw)
+      setShots(prev => { const next = prev.map((sh, idx) => idx === i ? { ...sh, status: "done", text: parsed.text, json: parsed.json, errMsg: "" } : sh); persist({ shots: next, step: 4 }); return next })
+    } catch (e) {
+      setShots(prev => { const next = prev.map((sh, idx) => idx === i ? { ...sh, status: "error", errMsg: e.message } : sh); persist({ shots: next, step: 4 }); return next })
+    }
+    setLoadMsg("")
+  }
+
+  const toggleExpand = (i) => {
+    if (shots[i].status !== "done" && shots[i].status !== "error") return
+    setExpanded(expanded === i ? null : i)
+    if (expanded !== i) { setTabs(prev => ({ ...prev, [i]: prev[i] || "images" })) }
+  }
+
+  const doneCount = shots.filter(s => s.status === "done").length
+
+  return (
+    <div style={{ maxWidth: 880, margin: "0 auto", padding: "20px 24px 60px" }}>
+      <Header step={step} onNewProject={resetAll} projectName={projectName} setProjectName={setProjectName} onSave={persist} onLoad={loadProject} onDelete={deleteProject} savedProjects={savedProjects} />
+      <Stepper step={step} loadMsg={loadMsg} />
+      <ErrorBanner err={err} onDismiss={() => setErr("")} />
+
+      {step === 1 && (
+        <div>
+          <div style={{ fontSize: "0.78rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em", color: "var(--color-text-tertiary)", marginBottom: 8 }}>Project Concept</div>
+          <textarea value={concept} onChange={e => setConcept(e.target.value)} placeholder="Describe your video concept in detail..." disabled={busy}
+            style={{ width: "100%", minHeight: 100, padding: 12, borderRadius: 8, border: "1px solid var(--color-border-primary)", background: "var(--color-background-secondary)", color: "var(--color-text-primary)", fontFamily: "var(--font-sans)", fontSize: "0.88rem", lineHeight: 1.7, resize: "vertical", outline: "none" }}
+            onFocus={e => e.target.style.borderColor = amber} onBlur={e => e.target.style.borderColor = "var(--color-border-primary)"} />
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 12 }}>
+            <button className="btn-primary" onClick={developScenes} disabled={busy || !concept.trim()}
+              style={{ background: amber, color: "#fff", border: "none", padding: "10px 24px", borderRadius: 8, fontSize: "0.85rem", fontWeight: 600, cursor: (busy || !concept.trim()) ? "not-allowed" : "pointer", opacity: (busy || !concept.trim()) ? 0.45 : 1, fontFamily: "var(--font-sans)" }}>
+              {busy ? <span>Developing <LoadingDots /></span> : "Develop Scenes"}
+            </button>
+            <span style={{ fontSize: "0.72rem", color: "var(--color-text-tertiary)" }}>&#8984; + Enter</span>
+          </div>
+        </div>
+      )}
+
+      {step === 2 && (
+        <div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+            <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--color-text-primary)" }}>{scenes.length} Scene{scenes.length !== 1 ? "s" : ""}</span>
+            <button className="btn-ghost" onClick={() => { setStep(1); setErr("") }}
+              style={{ background: "transparent", border: "1px solid var(--color-border-primary)", color: "var(--color-text-secondary)", padding: "6px 14px", borderRadius: 6, fontSize: "0.8rem", cursor: "pointer", fontFamily: "var(--font-sans)" }}>
+              &#8592; Edit Concept
+            </button>
+          </div>
+          {scenes.map((s, i) => (
+            <div key={i} style={{ background: "var(--color-background-card)", border: "1px solid var(--color-border-primary)", borderRadius: 8, padding: 16, marginBottom: 10 }}>
+              <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+                <div style={{ width: 28, height: 28, borderRadius: "50%", border: "2px solid " + amber, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.7rem", fontWeight: 700, color: amber, flexShrink: 0 }}>{s.number}</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: "0.88rem", fontWeight: 600, color: "var(--color-text-primary)", marginBottom: 4 }}>{s.title}</div>
+                  <div style={{ fontSize: "0.8rem", color: "var(--color-text-secondary)", lineHeight: 1.6, marginBottom: 8 }}>{s.description}</div>
+                  <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+                    {(s.characters || []).map((c, j) => (<span key={j} style={{ fontSize: "0.72rem", color: "var(--color-text-info)", display: "flex", alignItems: "center", gap: 4 }}><span>&#128101;</span> {c}</span>))}
+                    <span style={{ fontSize: "0.72rem", color: "var(--color-text-secondary)", display: "flex", alignItems: "center", gap: 4 }}><span>&#128205;</span> {s.location}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+          <button className="btn-primary" onClick={goToSheets} disabled={busy}
+            style={{ background: amber, color: "#fff", border: "none", padding: "10px 24px", borderRadius: 8, fontSize: "0.85rem", fontWeight: 600, cursor: busy ? "wait" : "pointer", opacity: busy ? 0.7 : 1, fontFamily: "var(--font-sans)", marginTop: 8 }}>
+            {busy ? <span>Building <LoadingDots /></span> : "Next: Master Sheets"}
+          </button>
+        </div>
+      )}
+
+      {step === 3 && (
+        <div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+            <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--color-text-primary)" }}>Master Sheets</span>
+            <button className="btn-ghost" onClick={() => setStep(2)}
+              style={{ background: "transparent", border: "1px solid var(--color-border-primary)", color: "var(--color-text-secondary)", padding: "6px 14px", borderRadius: 6, fontSize: "0.8rem", cursor: "pointer", fontFamily: "var(--font-sans)" }}>
+              &#8592; Back to Scenes
+            </button>
+          </div>
+          <SheetPanel characters={characters} locations={locations} />
+          <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
+            {locations.length === 0 && (
+              <button className="btn-ghost" onClick={buildSheets}
+                style={{ background: "transparent", border: "1px solid var(--color-border-primary)", color: "var(--color-text-secondary)", padding: "8px 16px", borderRadius: 6, fontSize: "0.8rem", cursor: "pointer", fontFamily: "var(--font-sans)" }}>
+                &#8635; Retry Location Sheets
+              </button>
+            )}
+            <button className="btn-primary" onClick={goToShots} disabled={busy}
+              style={{ background: amber, color: "#fff", border: "none", padding: "10px 24px", borderRadius: 8, fontSize: "0.85rem", fontWeight: 600, cursor: busy ? "wait" : "pointer", opacity: busy ? 0.7 : 1, fontFamily: "var(--font-sans)" }}>
+              {busy ? <span>Generating <LoadingDots /></span> : "Next: Shot Prompts"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {step === 4 && (
+        <div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+            <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--color-text-primary)" }}>{doneCount}/{shots.length} Shots Generated</span>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button className="btn-ghost" onClick={() => setStep(3)}
+                style={{ background: "transparent", border: "1px solid var(--color-border-primary)", color: "var(--color-text-secondary)", padding: "6px 14px", borderRadius: 6, fontSize: "0.8rem", cursor: "pointer", fontFamily: "var(--font-sans)" }}>
+                &#8592; Back to Sheets
+              </button>
+              <button className="btn-ghost" onClick={() => setSheetsOpen(!sheetsOpen)}
+                style={{ background: "transparent", border: "1px solid var(--color-border-primary)", color: "var(--color-text-secondary)", padding: "6px 14px", borderRadius: 6, fontSize: "0.8rem", cursor: "pointer", fontFamily: "var(--font-sans)" }}>
+                &#9654; Master Sheets
+              </button>
+            </div>
+          </div>
+          {sheetsOpen && (
+            <div style={{ background: "var(--color-background-card)", border: "1px solid var(--color-border-primary)", borderRadius: 8, padding: 16, marginBottom: 16 }}>
+              <SheetPanel characters={characters} locations={locations} />
+            </div>
+          )}
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {shots.map((shot, i) => {
+              const isExpanded = expanded === i
+              const status = shot.status
+              const canExpand = status === "done" || status === "error"
+              const badgeStyle = { width: 28, height: 28, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.7rem", fontWeight: 700, flexShrink: 0 }
+              let badge = { ...badgeStyle, border: "2px solid var(--color-border-secondary)", color: "var(--color-text-tertiary)" }
+              if (status === "loading") badge = { ...badgeStyle, border: "2px solid " + amber, color: amber, animation: "spin-badge 1.2s linear infinite" }
+              if (status === "done") badge = { ...badgeStyle, background: amber, border: "2px solid " + amber, color: "#fff" }
+              if (status === "error") badge = { ...badgeStyle, border: "2px solid var(--color-text-danger)", color: "var(--color-text-danger)" }
+              const glyph = status === "loading" ? "\u25CC" : status === "done" ? "\u2713" : status === "error" ? "\u2717" : shot.scene.number
+              const sub = status === "pending" ? "Waiting..." : status === "loading" ? "Generating..." : status === "error" ? shot.errMsg : "\u25B8 Expand"
+              return (
+                <div key={i} style={{ background: "var(--color-background-card)", border: "1px solid var(--color-border-primary)", borderRadius: 8, overflow: "hidden" }}>
+                  <div className="shot-row" onClick={() => toggleExpand(i)} style={{ padding: "12px 16px", display: "flex", alignItems: "center", gap: 12 }}>
+                    <div style={badge}>{glyph}</div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--color-text-primary)" }}>Scene {shot.scene.number} - {shot.scene.title}</div>
+                      <div style={{ fontSize: "0.75rem", color: status === "error" ? "var(--color-text-danger)" : "var(--color-text-tertiary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{sub}</div>
+                    </div>
+                    {status === "error" && !busy && (
+                      <button onClick={(e) => { e.stopPropagation(); retryShot(i) }}
+                        style={{ background: "transparent", border: "1px solid var(--color-border-danger)", color: "var(--color-text-danger)", padding: "4px 12px", borderRadius: 4, fontSize: "0.75rem", cursor: "pointer", fontFamily: "var(--font-sans)" }}>Retry</button>
+                    )}
+                  </div>
+                  {isExpanded && canExpand && (
+                    <div style={{ borderTop: "1px solid var(--color-border-primary)", padding: 16 }}>
+                      <div style={{ display: "flex", gap: 0, marginBottom: 16 }}>
+                        {["images", "video", "json"].map(tab => (
+                          <button key={tab} onClick={(e) => { e.stopPropagation(); setTabs(prev => ({ ...prev, [i]: tab })) }}
+                            style={{ background: (tabs[i] || "images") === tab ? amber : "transparent", color: (tabs[i] || "images") === tab ? "#fff" : "var(--color-text-secondary)", border: (tabs[i] || "images") === tab ? "1px solid " + amber : "1px solid var(--color-border-primary)", padding: "6px 16px", borderRadius: 4, fontSize: "0.76rem", fontWeight: 500, cursor: "pointer", fontFamily: "var(--font-sans)" }}>
+                            {tab === "images" ? "Image Prompts" : tab === "video" ? "Video Prompt" : "JSON"}
+                          </button>
+                        ))}
+                      </div>
+                      {(tabs[i] || "images") === "images" && (
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                          <div style={{ background: "var(--color-background-secondary)", borderRadius: 8, padding: 14, border: "1px solid var(--color-border-primary)" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                              <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--color-text-info)" }}>&#9679; Start Frame</span>
+                              {shot.json?.start_frame_prompt && <CopyButton shotKey={"sf" + i} label="Copy" copied={copied} setCopied={setCopied} text={shot.json.start_frame_prompt} />}
+                            </div>
+                            {shot.json?.start_frame_prompt
+                              ? <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.73rem", color: "var(--color-text-secondary)", lineHeight: 1.8, whiteSpace: "pre-wrap" }}>{shot.json.start_frame_prompt}</div>
+                              : <div style={{ fontSize: "0.78rem", color: "var(--color-text-tertiary)", fontStyle: "italic" }}>Frame prompt unavailable - response may be truncated. See Video Prompt tab.</div>}
+                          </div>
+                          <div style={{ background: "var(--color-background-secondary)", borderRadius: 8, padding: 14, border: "1px solid var(--color-border-primary)" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                              <span style={{ fontSize: "0.75rem", fontWeight: 600, color: amber }}>&#9679; End Frame</span>
+                              {shot.json?.end_frame_prompt && <CopyButton shotKey={"ef" + i} label="Copy" copied={copied} setCopied={setCopied} text={shot.json.end_frame_prompt} />}
+                            </div>
+                            {shot.json?.end_frame_prompt
+                              ? <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.73rem", color: "var(--color-text-secondary)", lineHeight: 1.8, whiteSpace: "pre-wrap" }}>{shot.json.end_frame_prompt}</div>
+                              : <div style={{ fontSize: "0.78rem", color: "var(--color-text-tertiary)", fontStyle: "italic" }}>Frame prompt unavailable - response may be truncated. See Video Prompt tab.</div>}
+                          </div>
+                        </div>
+                      )}
+                      {(tabs[i] || "images") === "video" && (
+                        <div style={{ background: "var(--color-background-secondary)", borderRadius: 8, padding: 14, border: "1px solid var(--color-border-primary)" }}>
+                          <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
+                            {shot.text && <CopyButton shotKey={"tx" + i} label="Copy" copied={copied} setCopied={setCopied} text={shot.text} />}
+                          </div>
+                          {shot.text
+                            ? <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.73rem", color: "var(--color-text-secondary)", lineHeight: 1.9, whiteSpace: "pre-wrap" }}>{shot.text}</div>
+                            : <div style={{ fontSize: "0.78rem", color: "var(--color-text-tertiary)", fontStyle: "italic" }}>No video prompt available.</div>}
+                        </div>
+                      )}
+                      {(tabs[i] || "images") === "json" && (
+                        <div style={{ background: "var(--color-background-secondary)", borderRadius: 8, padding: 14, border: "1px solid var(--color-border-primary)" }}>
+                          <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
+                            {shot.json && <CopyButton shotKey={"js" + i} label="Copy" copied={copied} setCopied={setCopied} text={JSON.stringify(shot.json, null, 2)} />}
+                          </div>
+                          {shot.json
+                            ? <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.73rem", color: "var(--color-text-secondary)", lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{JSON.stringify(shot.json, null, 2)}</div>
+                            : <div style={{ fontSize: "0.78rem", color: "var(--color-text-tertiary)", fontStyle: "italic" }}>No structured JSON available. The Video Prompt tab still contains the full script.</div>}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}

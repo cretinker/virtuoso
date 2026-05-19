@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Veo 3 Prompt Virtuoso — Start / End Frame Edition</title>
+    <style>
+      :root {
+        --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        --font-mono: "SF Mono", "Cascadia Code", Consolas, monospace;
+        --color-text-primary: #1a1a2e;
+        --color-text-secondary: #52525b;
+        --color-text-tertiary: #71717a;
+        --color-text-info: #2563eb;
+        --color-text-success: #16a34a;
+        --color-text-danger: #dc2626;
+        --color-text-inverse: #ffffff;
+        --color-background-primary: #ffffff;
+        --color-background-secondary: #f4f4f5;
+        --color-background-tertiary: #e4e4e7;
+        --color-background-card: #fafafa;
+        --color-background-danger: #fef2f2;
+        --color-background-info: #eff6ff;
+        --color-border-primary: #e4e4e7;
+        --color-border-secondary: #d4d4d8;
+        --color-border-danger: #fca5a5;
+        --color-border-success: #86efac;
+        --color-border-info: #93c5fd;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --color-text-primary: #e4e4e7;
+          --color-text-secondary: #a1a1aa;
+          --color-text-tertiary: #71717a;
+          --color-text-info: #60a5fa;
+          --color-text-success: #22c55e;
+          --color-text-danger: #ef4444;
+          --color-text-inverse: #18181b;
+          --color-background-primary: #09090b;
+          --color-background-secondary: #18181b;
+          --color-background-tertiary: #27272a;
+          --color-background-card: #18181b;
+          --color-background-danger: #450a0a;
+          --color-background-info: #172554;
+          --color-border-primary: #27272a;
+          --color-border-secondary: #3f3f46;
+          --color-border-danger: #7f1d1d;
+          --color-border-success: #14532d;
+          --color-border-info: #1e3a5f;
+        }
+      }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body {
+        font-family: var(--font-sans);
+        background: var(--color-background-primary);
+        color: var(--color-text-primary);
+        min-height: 100vh;
+      }
+      @keyframes ld-dot {
+        0%, 100% { opacity: 0.15; }
+        50% { opacity: 1; }
+      }
+      @keyframes spin-badge {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+      .btn-primary { transition: background 0.18s ease, opacity 0.18s ease; }
+      .btn-primary:hover:not(:disabled) { background: #9a7e24; }
+      .btn-ghost { transition: border-color 0.18s ease, color 0.18s ease; }
+      .btn-ghost:hover { border-color: var(--color-text-secondary); color: var(--color-text-primary); }
+      .shot-row { transition: background 0.15s ease; cursor: pointer; }
+      .shot-row:hover { background: var(--color-background-secondary); }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
