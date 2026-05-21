@@ -15,12 +15,23 @@ CRITICAL RULES:
 Output raw JSON array only — no backticks, no preamble, no commentary, just the array:
 [{"number":1,"title":"Scene title","description":"What happens","characters":["Character name"],"location":"Location name"}]`
 
-const CHAR_SHEETS_PROMPT = `You are the Veo-3 Prompt Virtuoso. Given a concept and scene breakdown, generate Character Master Sheets — the visual source of truth for every shot.
+const CHAR_SHEETS_PROMPT = `You are the Veo-3 Prompt Virtuoso. Given a concept and scene breakdown, generate Character Master Sheets — the visual source of truth used to generate consistent character images for every shot.
 
-For each significant recurring character:
-- Full physical description: age, build, skin tone, face shape, eyes, hair (style, colour, texture), distinguishing marks
-- Clothing: specific garments, fabrics, textures, colours, accessories — enough to be consistent across shots
-- Vocal profile: tone, pitch, accent, speech rhythm
+These sheets are for IMAGE GENERATION — describe ONLY what is visible. Do NOT describe personality, backstory, actions, role in the story, or what the character does. No vocal profile. This is purely a visual reference.
+
+For each significant recurring character, write ONE dense descriptive paragraph covering:
+- Ethnicity / race
+- Age and apparent age
+- Build / body type and height
+- Skin tone, complexion, texture (e.g. warm olive with freckles across the nose)
+- Face shape (e.g. oval, square, heart, round, diamond)
+- Specific facial features: nose (shape, bridge width), jawline, cheekbones, brow ridge, lips (fullness, shape)
+- Eyes: shape (almond, round, hooded, monolid), colour, lash density, brow shape and thickness
+- Hair: exact colour, texture (straight, wavy, coiled, kinky), length, style, hairline
+- Distinguishing marks: scars, tattoos, birthmarks, beauty marks, dimples
+- Clothing: specific garments, fabrics, textures, colours, accessories — exact enough to be perfectly consistent across every shot
+
+DO NOT include: personality traits, emotional state, backstory, what the character does, their job, their motivation, vocal description, or anything not visible in a still image.
 
 Output raw JSON array only — no backticks, no preamble:
 [{"name":"...","sheet":"full descriptive paragraph"}]`
@@ -232,6 +243,7 @@ function ErrorBanner({ err, onDismiss }) {
 }
 
 function SheetPanel({ characters, locations }) {
+  const [copied, setCopied] = useState("")
   const gridTwo = (characters.length > 1 || locations.length > 1)
   const grid = gridTwo ? { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 } : { display: "flex", flexDirection: "column", gap: 16 }
   return (
@@ -242,7 +254,10 @@ function SheetPanel({ characters, locations }) {
           <div style={grid}>
             {characters.map((c, i) => (
               <div key={i} style={{ background: "var(--color-background-card)", border: "1px solid var(--color-border-primary)", borderRadius: 8, padding: 14 }}>
-                <div style={{ fontSize: "0.88rem", fontWeight: 600, color: "var(--color-text-primary)", marginBottom: 8 }}>{c.name}</div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                  <span style={{ fontSize: "0.88rem", fontWeight: 600, color: "var(--color-text-primary)" }}>{c.name}</span>
+                  <CopyButton shotKey={"char" + i} label="Copy" copied={copied} setCopied={setCopied} text={c.sheet} />
+                </div>
                 <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.75rem", color: "var(--color-text-secondary)", lineHeight: 1.8, whiteSpace: "pre-wrap" }}>{c.sheet}</div>
               </div>
             ))}
@@ -255,7 +270,10 @@ function SheetPanel({ characters, locations }) {
           <div style={grid}>
             {locations.map((l, i) => (
               <div key={i} style={{ background: "var(--color-background-card)", border: "1px solid var(--color-border-primary)", borderRadius: 8, padding: 14 }}>
-                <div style={{ fontSize: "0.88rem", fontWeight: 600, color: "var(--color-text-primary)", marginBottom: 8 }}>{l.name}</div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                  <span style={{ fontSize: "0.88rem", fontWeight: 600, color: "var(--color-text-primary)" }}>{l.name}</span>
+                  <CopyButton shotKey={"loc" + i} label="Copy" copied={copied} setCopied={setCopied} text={l.sheet} />
+                </div>
                 <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.75rem", color: "var(--color-text-secondary)", lineHeight: 1.8, whiteSpace: "pre-wrap" }}>{l.sheet}</div>
               </div>
             ))}
