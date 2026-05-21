@@ -29,7 +29,7 @@ For each significant recurring character, write ONE dense descriptive paragraph 
 - Eyes: shape (almond, round, hooded, monolid), colour, lash density, brow shape and thickness
 - Hair: exact colour, texture (straight, wavy, coiled, kinky), length, style, hairline
 - Distinguishing marks: scars, tattoos, birthmarks, beauty marks, dimples
-- Clothing: ONE primary outfit ONLY — specific garments, fabrics, textures, colours, accessories. Pick the outfit the character wears most. Do NOT list multiple outfits or "at home"/"at work" variants.
+  - Clothing: ONE signature outfit — the defining look for this character's reference portrait. Pick the most iconic outfit they wear. Specific garments, fabrics, textures, colours, accessories. Do NOT list multiple outfits or "at home"/"at work" variants — those per-scene changes belong in the shot prompts, not here.
 
 DO NOT include: personality traits, emotional state, backstory, what the character does, their job, their motivation, vocal description, or anything not visible in a still image.
 
