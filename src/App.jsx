@@ -8,6 +8,10 @@ For each scene define:
 - Which named characters appear
 - Which named location it takes place in
 
+CRITICAL RULES:
+- Each scene must be ONE continuous shot in ONE location with ONE focused action. No montages, no time-lapses, no cross-cutting between locations, no "series of quick cuts" or "sequence showing." If you need to show multiple moments or locations, make them separate scenes.
+- Each scene description must specify a single camera perspective and continuous passage of time.
+
 Output raw JSON array only — no backticks, no preamble, no commentary, just the array:
 [{"number":1,"title":"Scene title","description":"What happens","characters":["Character name"],"location":"Location name"}]`
 
