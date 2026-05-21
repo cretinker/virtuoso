@@ -29,7 +29,7 @@ For each significant recurring character, write ONE dense descriptive paragraph 
 - Eyes: shape (almond, round, hooded, monolid), colour, lash density, brow shape and thickness
 - Hair: exact colour, texture (straight, wavy, coiled, kinky), length, style, hairline
 - Distinguishing marks: scars, tattoos, birthmarks, beauty marks, dimples
-- Clothing: specific garments, fabrics, textures, colours, accessories — exact enough to be perfectly consistent across every shot
+- Clothing: ONE primary outfit ONLY — specific garments, fabrics, textures, colours, accessories. Pick the outfit the character wears most. Do NOT list multiple outfits or "at home"/"at work" variants.
 
 DO NOT include: personality traits, emotional state, backstory, what the character does, their job, their motivation, vocal description, or anything not visible in a still image.
 
@@ -242,7 +242,7 @@ function ErrorBanner({ err, onDismiss }) {
   )
 }
 
-function SheetPanel({ characters, locations }) {
+function SheetPanel({ characters, locations, onRefreshChar }) {
   const [copied, setCopied] = useState("")
   const gridTwo = (characters.length > 1 || locations.length > 1)
   const grid = gridTwo ? { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 } : { display: "flex", flexDirection: "column", gap: 16 }
@@ -256,7 +256,15 @@ function SheetPanel({ characters, locations }) {
               <div key={i} style={{ background: "var(--color-background-card)", border: "1px solid var(--color-border-primary)", borderRadius: 8, padding: 14 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
                   <span style={{ fontSize: "0.88rem", fontWeight: 600, color: "var(--color-text-primary)" }}>{c.name}</span>
-                  <CopyButton shotKey={"char" + i} label="Copy" copied={copied} setCopied={setCopied} text={c.sheet} />
+                  <div style={{ display: "flex", gap: 6 }}>
+                    <CopyButton shotKey={"char" + i} label="Copy" copied={copied} setCopied={setCopied} text={c.sheet} />
+                    {onRefreshChar && (
+                      <button onClick={() => onRefreshChar(c.name)}
+                        style={{ background: "transparent", border: "1px solid var(--color-border-primary)", color: "var(--color-text-secondary)", padding: "3px 10px", borderRadius: 4, fontSize: "0.72rem", cursor: "pointer", fontFamily: "var(--font-sans)" }}>
+                        &#8635;
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.75rem", color: "var(--color-text-secondary)", lineHeight: 1.8, whiteSpace: "pre-wrap" }}>{c.sheet}</div>
               </div>
@@ -419,6 +427,22 @@ export default function App() {
     else { buildSheets() }
   }
 
+  const refreshChar = async (charName) => {
+    setBusy(true); setLoadMsg("Regenerating " + charName); setErr("")
+    const sceneText = scenes.map(s => s.number + ". " + s.title + " - " + s.description + " (Characters: " + (s.characters || []).join(", ") + ", Location: " + s.location + ")").join("\n")
+    const existingChars = characters.filter(c => c.name !== charName).map(c => "[CHARACTER: " + c.name + "]\n" + c.sheet).join("\n\n")
+    const userMsg = "CONCEPT:\n" + concept + "\n\nSCENES:\n" + sceneText + "\n\nEXISTING CHARACTERS (do NOT recreate these):\n" + existingChars + "\n\nREGENERATE ONLY: " + charName
+    try {
+      const raw = await callAPI(CHAR_SHEETS_PROMPT, userMsg, 8192)
+      const parsed = parseJSON(raw)
+      if (!parsed || !Array.isArray(parsed) || parsed.length === 0) throw new Error("Character parse failed")
+      const updated = parsed.find(c => c.name === charName)
+      if (!updated) throw new Error("Regenerated response did not contain " + charName)
+      setCharacters(prev => { const next = prev.map(c => c.name === charName ? updated : c); persist({ characters: next }); return next })
+    } catch (e) { setErr(e.message) }
+    finally { setBusy(false); setLoadMsg("") }
+  }
+
   const generateAllShots = async () => {
     setBusy(true); setErr("")
     const initial = scenes.map((s, i) => ({ scene: s, status: i === 0 ? "loading" : "pending", text: "", json: null, errMsg: "" }))
@@ -536,7 +560,7 @@ export default function App() {
               &#8592; Back to Scenes
             </button>
           </div>
-          <SheetPanel characters={characters} locations={locations} />
+          <SheetPanel characters={characters} locations={locations} onRefreshChar={refreshChar} />
           <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
             {locations.length === 0 && (
               <button className="btn-ghost" onClick={buildSheets}
@@ -569,7 +593,7 @@ export default function App() {
           </div>
           {sheetsOpen && (
             <div style={{ background: "var(--color-background-card)", border: "1px solid var(--color-border-primary)", borderRadius: 8, padding: 16, marginBottom: 16 }}>
-              <SheetPanel characters={characters} locations={locations} />
+              <SheetPanel characters={characters} locations={locations} onRefreshChar={refreshChar} />
             </div>
           )}
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
