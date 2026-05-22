@@ -45,13 +45,15 @@ CRITICAL JSON RULE: The sheet text is a JSON string value. You MUST escape any d
 Output raw JSON array only — no backticks, no preamble:
 [{"name":"...","sheet":"full descriptive paragraph"}]`
 
-const LOC_SHEETS_PROMPT = `You are the Veo-3 Prompt Virtuoso. Given a concept and scene breakdown, generate Location Master Sheets — the visual source of truth for every shot.
+const LOC_SHEETS_PROMPT = `You are the Grok Imagine Prompt Virtuoso. Given a concept and scene breakdown, generate Location Master Sheets — the visual source of truth used to generate consistent location reference images via Seedream 5.0 for every shot.
 
 For each significant recurring setting:
 - Physical materials: floor, walls, ceiling, surfaces and textures
 - Lighting: sources (natural/artificial), direction, colour temperature, quality (hard/soft)
 - Mood and atmosphere, key objects, set dressing details
 - Ambient soundscape: what you'd hear standing in this space
+
+End every location sheet with this Seedream 5.0 style tag: "architectural photography, hyperrealistic interior, 24mm wide lens, ambient lighting, 4K material texture, photorealistic depth of field"
 
 CRITICAL JSON RULE: The sheet text is a JSON string value. You MUST escape any double-quote characters inside the sheet description as \\". Never use unescaped double quotes within the sheet text.
 
