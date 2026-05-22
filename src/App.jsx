@@ -789,6 +789,10 @@ export default function App() {
                       <button onClick={(e) => { e.stopPropagation(); retryShot(i) }}
                         style={{ background: "transparent", border: "1px solid var(--color-border-danger)", color: "var(--color-text-danger)", padding: "4px 12px", borderRadius: 4, fontSize: "0.75rem", cursor: "pointer", fontFamily: "var(--font-sans)" }}>Retry</button>
                     )}
+                    {status === "done" && !busy && (
+                      <button onClick={(e) => { e.stopPropagation(); retryShot(i) }}
+                        style={{ background: "transparent", border: "1px solid var(--color-border-primary)", color: "var(--color-text-secondary)", padding: "4px 12px", borderRadius: 4, fontSize: "0.75rem", cursor: "pointer", fontFamily: "var(--font-sans)" }}>&#8635;</button>
+                    )}
                   </div>
                   {isExpanded && canExpand && (
                     <div style={{ borderTop: "1px solid var(--color-border-primary)", padding: 16 }}>
