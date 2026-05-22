@@ -501,6 +501,28 @@ export default function App() {
     setLoadMsg("")
   }
 
+  const continueShots = async () => {
+    setBusy(true); setErr("")
+    const charSheets = characters.map(c => "[CHARACTER: " + c.name + "]\n" + c.sheet).join("\n\n")
+    const locSheets = locations.map(l => "[LOCATION: " + l.name + "]\n" + l.sheet).join("\n\n")
+    const context = charSheets + "\n\n" + locSheets
+    for (let i = 0; i < shots.length; i++) {
+      if (shots[i].status !== "pending") continue
+      setLoadMsg("Generating shot " + (i + 1) + " of " + shots.length)
+      setShots(prev => prev.map((s, idx) => idx === i ? { ...s, status: "loading", errMsg: "" } : s))
+      const s = scenes[i]
+      const userMsg = context + "\n\nSCENE " + s.number + " - " + s.title + "\n" + s.description + "\nCharacters: " + (s.characters || []).join(", ") + "\nLocation: " + s.location
+      try {
+        const raw = await callAPI(SHOT_PROMPT, userMsg)
+        const parsed = parseShot(raw)
+        setShots(prev => { const next = prev.map((sh, idx) => idx === i ? { ...sh, status: "done", text: parsed.text, json: parsed.json, errMsg: "" } : sh); persist({ shots: next, step: 4 }); return next })
+      } catch (e) {
+        setShots(prev => { const next = prev.map((sh, idx) => idx === i ? { ...sh, status: "error", errMsg: e.message } : sh); persist({ shots: next, step: 4 }); return next })
+      }
+    }
+    setBusy(false); setLoadMsg("")
+  }
+
   const toggleExpand = (i) => {
     if (shots[i].status !== "done" && shots[i].status !== "error") return
     setExpanded(expanded === i ? null : i)
@@ -602,6 +624,14 @@ export default function App() {
               </button>
             </div>
           </div>
+          {shots.some(s => s.status === "pending") && !busy && (
+            <div style={{ marginBottom: 12 }}>
+              <button className="btn-primary" onClick={continueShots}
+                style={{ background: amber, color: "#fff", border: "none", padding: "8px 18px", borderRadius: 6, fontSize: "0.82rem", fontWeight: 600, cursor: "pointer", fontFamily: "var(--font-sans)" }}>
+                &#9654; Continue Generating ({shots.filter(s => s.status === "pending").length} remaining)
+              </button>
+            </div>
+          )}
           {sheetsOpen && (
             <div style={{ background: "var(--color-background-card)", border: "1px solid var(--color-border-primary)", borderRadius: 8, padding: 16, marginBottom: 16 }}>
               <SheetPanel characters={characters} locations={locations} onRefreshChar={refreshChar} />
