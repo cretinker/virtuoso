@@ -115,8 +115,16 @@ The JSON section (raw JSON only — NO backticks, NO preamble, NO markdown code 
 function parseJSON(raw) {
   const s = raw.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim()
   try { return JSON.parse(s) } catch {}
+  // Try to find JSON array by looking for "[{" pattern
+  const jsonStart = s.search(/\[\s*\{/)
+  if (jsonStart >= 0) {
+    const fromStart = s.slice(jsonStart)
+    try { return JSON.parse(fromStart) } catch {}
+    const arr = fromStart.match(/\[[\s\S]*\]/)
+    if (arr) try { return JSON.parse(arr[0]) } catch {}
+  }
   const firstBracket = s.indexOf("[")
-  if (firstBracket >= 0) {
+  if (firstBracket >= 0 && firstBracket !== jsonStart) {
     const fromBracket = s.slice(firstBracket)
     try { return JSON.parse(fromBracket) } catch {}
     const arr = fromBracket.match(/\[[\s\S]*\]/)
@@ -475,17 +483,18 @@ export default function App() {
     let finalLocs = locations
     try {
       setLoadMsg("Building character sheets")
-      const rawChars = await callAPI(CHAR_SHEETS_PROMPT, userMsg, 8192)
+      const rawChars = await callAPI(CHAR_SHEETS_PROMPT, userMsg, 16384)
       const chars = parseJSON(rawChars)
-      if (!chars || !Array.isArray(chars) || chars.length === 0) throw new Error("Character sheet parse failed")
+      if (!chars || !Array.isArray(chars) || chars.length === 0) throw new Error("Character sheet parse failed (" + rawChars.length + " chars). First 200: " + rawChars.slice(0, 200) + " ... Last 200: " + rawChars.slice(-200))
       setCharacters(chars)
       finalChars = chars
     } catch (e) { setErr(e.message); setBusy(false); setLoadMsg(""); return }
     try {
       setLoadMsg("Building location sheets")
-      const rawLocs = await callAPI(LOC_SHEETS_PROMPT, userMsg, 8192)
+      const rawLocs = await callAPI(LOC_SHEETS_PROMPT, userMsg, 16384)
       const locs = parseJSON(rawLocs)
       if (locs && Array.isArray(locs) && locs.length > 0) { setLocations(locs); finalLocs = locs }
+      else { setErr("Location sheet parse failed (" + rawLocs.length + " chars). First 200: " + rawLocs.slice(0, 200) + " ... Last 200: " + rawLocs.slice(-200)) }
     } catch (e) { setErr("Location sheets unavailable: " + e.message) }
     setStep(3)
     persist({ characters: finalChars, locations: finalLocs, step: 3 })
@@ -504,9 +513,9 @@ export default function App() {
     let userMsg = "CONCEPT:\n" + concept + "\n\nSCENES:\n" + sceneText + "\n\nEXISTING CHARACTERS (do NOT recreate these):\n" + existingChars + "\n\nREGENERATE ONLY: " + charName
     if (instruction) userMsg += "\n\nCRITICAL REGENERATION INSTRUCTIONS (you MUST apply these changes):\n" + instruction
     try {
-      const raw = await callAPI(CHAR_SHEETS_PROMPT, userMsg, 8192)
+      const raw = await callAPI(CHAR_SHEETS_PROMPT, userMsg, 16384)
       const parsed = parseJSON(raw)
-      if (!parsed || !Array.isArray(parsed) || parsed.length === 0) throw new Error("Character parse failed")
+      if (!parsed || !Array.isArray(parsed) || parsed.length === 0) throw new Error("Character sheet parse failed (" + raw.length + " chars). First 200: " + raw.slice(0, 200) + " ... Last 200: " + raw.slice(-200))
       const updated = parsed.find(c => c.name === charName)
       if (!updated) throw new Error("Regenerated response did not contain " + charName)
       setCharacters(prev => { const next = prev.map(c => c.name === charName ? updated : c); persist({ characters: next }); return next })
@@ -522,9 +531,9 @@ export default function App() {
     let userMsg = "CONCEPT:\n" + concept + "\n\nSCENES:\n" + sceneText + "\n\nEXISTING LOCATIONS (do NOT recreate these):\n" + existingLocs + "\n\nREGENERATE ONLY: " + locName
     if (instruction) userMsg += "\n\nCRITICAL REGENERATION INSTRUCTIONS (you MUST apply these changes):\n" + instruction
     try {
-      const raw = await callAPI(LOC_SHEETS_PROMPT, userMsg, 8192)
+      const raw = await callAPI(LOC_SHEETS_PROMPT, userMsg, 16384)
       const parsed = parseJSON(raw)
-      if (!parsed || !Array.isArray(parsed) || parsed.length === 0) throw new Error("Location parse failed")
+      if (!parsed || !Array.isArray(parsed) || parsed.length === 0) throw new Error("Location parse failed (" + raw.length + " chars). First 200: " + raw.slice(0, 200) + " ... Last 200: " + raw.slice(-200))
       const updated = parsed.find(l => l.name === locName)
       if (!updated) throw new Error("Regenerated response did not contain " + locName)
       setLocations(prev => { const next = prev.map(l => l.name === locName ? updated : l); persist({ locations: next }); return next })
