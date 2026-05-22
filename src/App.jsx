@@ -812,13 +812,25 @@ export default function App() {
                         </div>
                       )}
                       {(tabs[i] || "images") === "video" && (
-                        <div style={{ background: "var(--color-background-secondary)", borderRadius: 8, padding: 14, border: "1px solid var(--color-border-primary)" }}>
-                          <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
-                            {shot.text && <CopyButton shotKey={"tx" + i} label="Copy" copied={copied} setCopied={setCopied} text={shot.text} />}
+                        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                          <div style={{ background: "var(--color-background-secondary)", borderRadius: 8, padding: 14, border: "1px solid var(--color-border-primary)" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                              <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--color-text-tertiary)" }}>VIDEO PARAGRAPH</span>
+                              {shot.text && <CopyButton shotKey={"tx" + i} label="Copy" copied={copied} setCopied={setCopied} text={shot.text} />}
+                            </div>
+                            {shot.text
+                              ? <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.73rem", color: "var(--color-text-secondary)", lineHeight: 1.9, whiteSpace: "pre-wrap" }}>{shot.text}</div>
+                              : <div style={{ fontSize: "0.78rem", color: "var(--color-text-tertiary)", fontStyle: "italic" }}>No video prompt available.</div>}
                           </div>
-                          {shot.text
-                            ? <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.73rem", color: "var(--color-text-secondary)", lineHeight: 1.9, whiteSpace: "pre-wrap" }}>{shot.text}</div>
-                            : <div style={{ fontSize: "0.78rem", color: "var(--color-text-tertiary)", fontStyle: "italic" }}>No video prompt available.</div>}
+                          {shot.json?.grok_prompt && (
+                            <div style={{ background: "var(--color-background-secondary)", borderRadius: 8, padding: 14, border: "1px solid #B8942A" }}>
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                                <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "#B8942A" }}>GROK IMAGINE PROMPT — ready to paste</span>
+                                <CopyButton shotKey={"gp" + i} label="Copy" copied={copied} setCopied={setCopied} text={shot.json.grok_prompt} />
+                              </div>
+                              <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.73rem", color: "var(--color-text-secondary)", lineHeight: 1.9, whiteSpace: "pre-wrap" }}>{shot.json.grok_prompt}</div>
+                            </div>
+                          )}
                         </div>
                       )}
                       {(tabs[i] || "images") === "json" && (
