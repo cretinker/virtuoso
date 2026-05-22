@@ -20,6 +20,7 @@ const CHAR_SHEETS_PROMPT = `You are the Veo-3 Prompt Virtuoso. Given a concept a
 These sheets are for IMAGE GENERATION — describe ONLY what is visible. Do NOT describe personality, backstory, actions, role in the story, or what the character does. No vocal profile. This is purely a visual reference.
 
 For each significant recurring character, write ONE dense descriptive paragraph covering:
+- Full given name (every character MUST have a specific, culturally appropriate name — never "Man", "Woman", "Elder", or generic labels)
 - Ethnicity / race
 - Age and apparent age
 - Build / body type and height
@@ -28,8 +29,8 @@ For each significant recurring character, write ONE dense descriptive paragraph 
 - Specific facial features: nose (shape, bridge width), jawline, cheekbones, brow ridge, lips (fullness, shape)
 - Eyes: shape (almond, round, hooded, monolid), colour, lash density, brow shape and thickness
 - Hair: exact colour, texture (straight, wavy, coiled, kinky), length, style, hairline
-- Distinguishing marks: scars, tattoos, birthmarks, beauty marks, dimples
-  - Clothing: ONE signature outfit — the defining look for this character's reference portrait. Pick the most iconic outfit they wear. Specific garments, fabrics, textures, colours, accessories. Do NOT list multiple outfits or "at home"/"at work" variants — those per-scene changes belong in the shot prompts, not here.
+- Distinguishing marks (ONLY IF SPECIFICALLY MENTIONED IN THE CONCEPT — if the concept does not describe a scar, mole, tattoo, or birthmark, DO NOT invent one; most people do not have visible distinguishing marks, so omit this section entirely unless the character's story explicitly includes one)
+- Clothing: ONE signature outfit — the defining look for this character's reference portrait. Pick the most iconic outfit they wear. Specific garments, fabrics, textures, colours, accessories. Do NOT list multiple outfits or "at home"/"at work" variants — those per-scene changes belong in the shot prompts, not here.
 
 DO NOT include: personality traits, emotional state, backstory, what the character does, their job, their motivation, vocal description, or anything not visible in a still image.
 
