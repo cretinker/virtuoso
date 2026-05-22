@@ -105,11 +105,13 @@ NO headers. NO labels. NO "SECTION 1". NO "THE VIDEO PROMPT". NO preamble like "
 - Writing less than 200 words in the video paragraph
 
 === START & END FRAME PROMPTS (for image generation only, after ---JSON---): ===
-These are standalone image prompts for image generators. They describe ONE FROZEN MOMENT each — no motion, no camera movement, no "begins to", no transitions. Just the exact visual state of that single frame.
+These are TWO frozen moments from the SAME continuous shot — like hitting pause at the beginning and then at the end of the clip. They share the same location, same lighting setup, same lens, same composition, same subject. The only difference is where the action is within the frame.
 
-start_frame_prompt: The EXACT visual state of frame 1. Fully self-contained. Include: subject pose + exact position in frame + expression, lighting (direction, quality, color temperature, source type), lens + focal length, depth of field, compositional rule, color palette with hex codes, mood keywords, visual style references. Must generate the correct image with zero additional prompting.
+CRITICAL: Start and end frames MUST be a direct pair from ONE shot. The end frame is NOT a new scene, NOT a different camera angle, NOT a new concept. It is simply what the viewer sees after the camera movement and action have played out within this same shot. Everything visible in the start frame should still be plausible in the end frame — just progressed.
 
-end_frame_prompt: The EXACT visual state of the last frame after all action resolves. Same format and depth. The difference between start and end MUST clearly demonstrate the shot's emotional arc (e.g. start: hand hovering uncertainly over a door handle, end: hand resting flat against the wood, committed).
+start_frame_prompt: The EXACT visual state of frame 1 BEFORE the action begins. This is the establishing moment — the subject's starting position, initial emotion, pre-movement pose. Include: subject pose + exact position in frame + expression, lighting (direction, quality, color temperature, source type), lens + focal length, depth of field, compositional rule, color palette with hex codes, mood keywords, visual style references. Must generate the correct image with zero additional prompting.
+
+end_frame_prompt: The EXACT visual state of the last frame AFTER the action resolves WITHIN THIS SAME SHOT. Same framing, same lens, same location — only the action has progressed. If the start frame shows a man starting down a path, the end frame shows him at the stream bending to scoop water. The progression from start to end must feel like one unbroken moment. Same format and depth as the start frame.
 
 ---JSON---
 
