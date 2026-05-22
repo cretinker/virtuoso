@@ -83,6 +83,8 @@ Drop directly into the visual. No "the shot opens with." Weave these elements in
 - Camera technique jargon or rubric naming
 - Writing more than 120 words
 
+Specific numbers (85mm, f/1.8) are fine — avoid technique labels like "dolly-in," "rack focus," or "Dutch angle."
+
 === START & END FRAME PROMPTS — for Seedream 5.0 image generation (after ---JSON---): ===
 These are TWO frozen moments from the SAME continuous shot — like hitting pause at the beginning and then at the end of the clip. They share the same location, same lighting setup, same lens, same focal length, same composition. The only difference is where the action has progressed within the frame.
 
@@ -97,7 +99,7 @@ end_frame_prompt: The EXACT visual state of the last frame AFTER the action reso
 ---JSON---
 
 The JSON section (raw JSON only — NO backticks, NO preamble, NO markdown code fences):
-{"start_frame_prompt":"...","end_frame_prompt":"...","grok_prompt":"A single ready-to-paste string combining the video paragraph with key visual cues, formatted for direct use with the Grok Imagine Video API","scene_description":"0-2s: ... 2-5s: ... 5-8s: ...","visual_style":"style keywords and cinematic references","camera_movement":"choreography + intent + framing","main_subject":"subject and action","background_setting":"environment with textures, mood, key objects","lighting_mood":"lighting setup and emotional tone","audio_cue":"ambient layers, specific SFX, music bed","color_palette":"dominant colours with hex codes","dialog":"exact dialogue or None","subtitles":"ON or OFF"}`
+{"start_frame_prompt":"...","end_frame_prompt":"...","grok_prompt":"The video paragraph exactly as written above, ready for direct Grok Imagine Video API use","scene_description":"0-2s: ... 2-5s: ... 5-8s: ...","visual_style":"style keywords and cinematic references","camera_movement":"choreography + intent + framing","main_subject":"subject and action","background_setting":"environment with textures, mood, key objects","lighting_mood":"lighting setup and emotional tone","audio_cue":"ambient layers, specific SFX, music bed","color_palette":"dominant colours with hex codes","dialog":"exact dialogue or None","subtitles":"ON or OFF"}`
 
 function parseJSON(raw) {
   let s = raw.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim()
