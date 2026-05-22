@@ -60,71 +60,44 @@ CRITICAL JSON RULE: The sheet text is a JSON string value. You MUST escape any d
 Output raw JSON array only — no backticks, no preamble:
 [{"name":"...","sheet":"full descriptive paragraph"}]`
 
-const SHOT_PROMPT = `You are the Veo-3 Prompt Virtuoso — a meticulous film director and cinematographer. Using the provided master sheets as your visual source of truth, generate a complete cinematic shot prompt for ONE scene.
+const SHOT_PROMPT = `You are the Grok Imagine Prompt Virtuoso — a cinematic video prompt engineer. Using the provided master sheets as your visual source of truth, generate a complete shot prompt for ONE scene optimized for Grok Imagine video generation.
 
 === CRITICAL FORMAT RULE — READ FIRST ===
 Your ENTIRE response must contain exactly TWO things separated by ---JSON--- and NOTHING ELSE:
-  1. One flowing cinematic paragraph (the video prompt)
-  2. Raw JSON (the frame/image prompts)
-NO headers. NO labels. NO "SECTION 1". NO "THE VIDEO PROMPT". NO preamble like "Here is the shot prompt". NO commentary. NO markdown formatting. NO backticks around the JSON. If your response starts with anything other than the first word of the cinematic paragraph, you have FAILED.
+  1. One flowing cinematic paragraph (50-100 words) — the Grok Imagine video prompt
+  2. Raw JSON (the Seedream 5.0 frame/image prompts + metadata)
+NO headers. NO labels. NO "SECTION 1". NO preamble. NO commentary. NO markdown formatting. NO backticks around the JSON. If your response starts with anything other than the first word of the cinematic paragraph, you have FAILED.
 
-=== PARAGRAPH STRUCTURE — weave these components in this EXACT ORDER as one seamless paragraph: ===
-(1) CINEMATIC HOOK: Mood + visual style + shot type + focal length. Include depth of field. This is one powerful opening sentence that drops the reader directly into the frame.
-(2) CAMERA CHOREOGRAPHY (most important section): Use 2+ named techniques from the rubric below. For EVERY technique you use, explicitly state its emotional purpose: "the slow dolly-in intensifies her isolation." Describe timing and distance in specific terms: "a 40cm push-in over 5 seconds" NOT "slow push-in." This section should be the richest part of the paragraph.
-(3) SUBJECT & ACTION: What happens moment by moment. Precision verbs. "Her thumb hesitates over the screen then flicks downward" NOT "she scrolls." Describe micro-movements — hands, eyes, breath, posture shifts.
-(4) LIGHTING EVOLUTION: Source named (practical lamp, window, candle, screen glow, neon, overhead fluorescent), quality (hard/soft), color temperature in kelvin or descriptive terms. The light MUST change during the shot — describe the starting state AND the ending state. Example: "the 5600K window light at frame left shifts to a deep 3200K amber as the sun drops."
-(5) AMBIANCE & AUDIO: 2+ specific diegetic sounds with SPATIAL PLACEMENT (off-screen right, close-mic, distant through wall, directly overhead). If dialogue exists, EXACT words. Music cues if any. Audio must evolve with the visual — not static background noise.
+=== VIDEO PARAGRAPH — 50-100 words of flowing cinematic prose for Grok Imagine: ===
+Drop directly into the visual. No "the shot opens with." Weave these elements into ONE seamless paragraph:
+(1) VISUAL HOOK: Mood + shot type + focal length + depth of field. One powerful opening sentence.
+(2) CAMERA: Describe movement naturally — "a slow push-in tightens on her face" or "the frame drifts left to reveal" — not "dolly-in technique." Use only Grok-compatible moves: slow push-in, gentle pull-back, subtle pan, static lock-off, smooth tracking, subtle handheld. NO whip pans, crash zooms, Dutch angles, or aggressive handheld shake.
+(3) ACTION: What happens moment by moment. Precision verbs. "Her thumb hesitates over the screen then flicks downward" NOT "she scrolls." Describe micro-movements — hands, eyes, breath, posture shifts.
+(4) LIGHTING: Source named (practical lamp, window, candle, screen glow, neon, overhead fluorescent), quality (hard/soft), color temperature. Describe how light changes during the shot.
+(5) AUDIO: 2+ specific diegetic sounds with spatial placement. Dialogue in quotes if present.
+(6) END TAG: "cinematic, hyperreal, 4K film grain, 720p" — this MUST appear at the end.
 
-=== CAMERA TECHNIQUE RUBRIC — you MUST use 2+ from this list per shot: ===
-- Push-in / dolly-in: intimacy, revelation, tension building, internal focus
-- Pull-out / dolly-out: isolation, context reveal, emotional distance, abandonment
-- Rack focus / pull focus: shifting attention, internal realization, memory trigger
-- Slow pan: revelation, following action, establishing spatial relationships
-- Whip pan: energy, disorientation, time compression, emotional whiplash
-- Crane / jib up: power, transcendence, expanding perspective
-- Crane / jib down: grounding, vulnerability, return to reality
-- Steadicam tracking: immersion, following, fluid journey, subjective experience
-- Handheld (subtle shake): documentary intimacy, nervous energy, raw immediacy
-- Handheld (aggressive shake): panic, chaos, loss of control
-- Crash zoom / snap zoom: shock, sudden realization, comedic punctuation
-- Static lock-off: stillness, tension, reverence, letting the audience lean in
-- Dutch angle: unease, psychological imbalance, world tilting
-- Over-the-shoulder: voyeurism, shared perspective, withheld information
-- Low angle: power, menace, grandeur, subject dominates frame
-- High angle: vulnerability, overview, diminishment, fate closing in
-- Circular track / arc shot: disorientation, circling a moment, 360-revelation
+=== FORBIDDEN: ===
+- "The shot opens on..." or "The shot begins..."
+- Generic lighting ("warm lighting")
+- Camera technique jargon or rubric naming
+- Writing more than 120 words
 
-=== QUALITY FLOOR — before emitting, verify your shot has ALL of these. If ANY is missing, REWRITE the shot: ===
-[ ] A specific focal length named and justified (e.g. 35mm for environmental context, 85mm for intimate portrait)
-[ ] Depth of field specified (e.g. shallow f/1.8 isolating the subject from a blurred background)
-[ ] Light source explicitly named (not just "warm light" — say "a 2700K tungsten table lamp at frame right casting a pool on the oak surface")
-[ ] Light color temperature shift during the shot (starting state -> ending state)
-[ ] At least ONE exact textural detail (fabric type: "worn corduroy", material: "tarnished brass handle", surface: "water-stained concrete")
-[ ] 2+ specific diegetic sounds with spatial placement ("the soft plastic click of a phone case from frame left", "distant muffled laughter bleeding through the wall")
-[ ] 2+ named camera techniques from the rubric, each with explicit emotional justification
+=== START & END FRAME PROMPTS — for Seedream 5.0 image generation (after ---JSON---): ===
+These are TWO frozen moments from the SAME continuous shot — like hitting pause at the beginning and then at the end of the clip. They share the same location, same lighting setup, same lens, same focal length, same composition. The only difference is where the action has progressed within the frame.
 
-=== FORBIDDEN — these will make the shot UNUSABLE: ===
-- Starting with "The shot opens on..." or "The shot begins..." — drop directly into the visual
-- Using generic "warm lighting" or "cool lighting" — name the source, quality, and temperature
-- Saying "the camera moves" without naming the technique, distance, speed, and emotional purpose
-- Summarizing action — describe it moment by moment with precise verbs
-- Labeling, bullet-pointing, or sectioning anything within the paragraph
-- Mentioning Veo-3, Midjourney, Flux, Imagen, or any model name in the output
-- Writing less than 200 words in the video paragraph
+CRITICAL: Start and end frames MUST be a direct pair from ONE shot. The end frame is NOT a new scene, NOT a different camera angle, NOT a new concept. It is simply what the viewer sees after the camera movement and action have played out within this same shot.
 
-=== START & END FRAME PROMPTS (for image generation only, after ---JSON---): ===
-These are TWO frozen moments from the SAME continuous shot — like hitting pause at the beginning and then at the end of the clip. They share the same location, same lighting setup, same lens, same composition, same subject. The only difference is where the action is within the frame.
+Seedream 5.0 uses Deep Thinking — it reasons through prompts before generating. Therefore these prompts should be rich with specific detail: exact spatial positions, material textures, lighting specifics.
 
-CRITICAL: Start and end frames MUST be a direct pair from ONE shot. The end frame is NOT a new scene, NOT a different camera angle, NOT a new concept. It is simply what the viewer sees after the camera movement and action have played out within this same shot. Everything visible in the start frame should still be plausible in the end frame — just progressed.
+start_frame_prompt: The EXACT visual state of frame 1 BEFORE the action begins. The establishing moment — subject's starting position, pre-movement pose, initial expression. Describe: subject pose + exact position in frame + expression, lighting (direction, quality, color temperature, source type), lens + focal length + depth of field, compositional rule, color palette with hex codes. Include Seedream keywords: "hyperrealistic, cinematic lighting, 4K texture detail, photorealistic depth of field."
 
-start_frame_prompt: The EXACT visual state of frame 1 BEFORE the action begins. This is the establishing moment — the subject's starting position, initial emotion, pre-movement pose. Include: subject pose + exact position in frame + expression, lighting (direction, quality, color temperature, source type), lens + focal length, depth of field, compositional rule, color palette with hex codes, mood keywords, visual style references. Must generate the correct image with zero additional prompting.
-
-end_frame_prompt: The EXACT visual state of the last frame AFTER the action resolves WITHIN THIS SAME SHOT. Same framing, same lens, same location — only the action has progressed. If the start frame shows a man starting down a path, the end frame shows him at the stream bending to scoop water. The progression from start to end must feel like one unbroken moment. Same format and depth as the start frame.
+end_frame_prompt: The EXACT visual state of the last frame AFTER the action resolves WITHIN THIS SAME SHOT. Same framing, same lens, same focal length, same depth of field — only the subject position, lighting state, and emotion have progressed. Describe the positional progression clearly: where the subject moved from and to (e.g. "Start: subject in doorway, hand gripping frame. End: subject at window, palm pressed flat against glass."). Include Seedream keywords: "hyperrealistic, cinematic lighting, 4K texture detail, photorealistic depth of field."
 
 ---JSON---
 
 The JSON section (raw JSON only — NO backticks, NO preamble, NO markdown code fences):
-{"start_frame_prompt":"...","end_frame_prompt":"...","scene_description":"0-2s: ... 2-5s: ... 5-8s: ...","visual_style":"style keywords and cinematic references","camera_movement":"choreography + intent + framing","main_subject":"subject and action","background_setting":"environment with textures, mood, key objects","lighting_mood":"lighting setup and emotional tone","audio_cue":"ambient layers, specific SFX, music bed","color_palette":"dominant colours with hex codes","dialog":"exact dialogue or None","subtitles":"ON or OFF"}`
+{"start_frame_prompt":"...","end_frame_prompt":"...","grok_prompt":"A single ready-to-paste string combining the video paragraph with key visual cues, formatted for direct use with the Grok Imagine Video API","scene_description":"0-2s: ... 2-5s: ... 5-8s: ...","visual_style":"style keywords and cinematic references","camera_movement":"choreography + intent + framing","main_subject":"subject and action","background_setting":"environment with textures, mood, key objects","lighting_mood":"lighting setup and emotional tone","audio_cue":"ambient layers, specific SFX, music bed","color_palette":"dominant colours with hex codes","dialog":"exact dialogue or None","subtitles":"ON or OFF"}`
 
 function parseJSON(raw) {
   let s = raw.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim()
