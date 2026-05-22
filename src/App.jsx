@@ -112,10 +112,15 @@ The JSON section (raw JSON only — NO backticks, NO preamble, NO markdown code 
 {"start_frame_prompt":"...","end_frame_prompt":"...","scene_description":"0-2s: ... 2-5s: ... 5-8s: ...","visual_style":"style keywords and cinematic references","camera_movement":"choreography + intent + framing","main_subject":"subject and action","background_setting":"environment with textures, mood, key objects","lighting_mood":"lighting setup and emotional tone","audio_cue":"ambient layers, specific SFX, music bed","color_palette":"dominant colours with hex codes","dialog":"exact dialogue or None","subtitles":"ON or OFF"}`
 
 function parseJSON(raw) {
-  const s = raw.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim()
+  const s = raw.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim()
   try { return JSON.parse(s) } catch {}
-  const arr = s.match(/\[[\s\S]*?\]/)
-  if (arr) try { return JSON.parse(arr[0]) } catch {}
+  const firstBracket = s.indexOf("[")
+  if (firstBracket >= 0) {
+    const fromBracket = s.slice(firstBracket)
+    try { return JSON.parse(fromBracket) } catch {}
+    const arr = fromBracket.match(/\[[\s\S]*\]/)
+    if (arr) try { return JSON.parse(arr[0]) } catch {}
+  }
   const arrOpen = s.match(/\[[\s\S]*/)
   if (arrOpen) {
     const closes = ["]", '"}]', ']}]', '"]}]', '"]}', ']}"', '"]}"', '}]', ']}', '"}]}', '"]}]}', '"]}"]']
@@ -127,8 +132,13 @@ function parseJSON(raw) {
       try { return JSON.parse(arrOpen[0].substring(0, lastComma + 1) + "]") } catch {}
     }
   }
-  const obj = s.match(/\{[\s\S]*\}/)
-  if (obj) try { return JSON.parse(obj[0]) } catch {}
+  const firstBrace = s.indexOf("{")
+  if (firstBrace >= 0) {
+    const fromBrace = s.slice(firstBrace)
+    try { return JSON.parse(fromBrace) } catch {}
+    const obj = fromBrace.match(/\{[\s\S]*\}/)
+    if (obj) try { return JSON.parse(obj[0]) } catch {}
+  }
   const objOpen = s.match(/\{[\s\S]*/)
   if (objOpen) {
     const closes = ["}", '"}', '"]}', '"}]}', '"]}"}']
