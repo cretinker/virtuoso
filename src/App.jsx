@@ -17,22 +17,26 @@ CRITICAL RULES:
 Output raw JSON array only — no backticks, no preamble, no commentary, just the array:
 [{"number":1,"title":"Scene title","description":"What happens","characters":["Character name"],"location":"Location name"}]`
 
-const CHAR_SHEETS_PROMPT = `You are the Veo-3 Prompt Virtuoso. Given a concept and scene breakdown, generate Character Master Sheets — the visual source of truth used to generate consistent character images for every shot.
+const CHAR_SHEETS_PROMPT = `You are the Grok Imagine Prompt Virtuoso. Given a concept and scene breakdown, generate Character Master Sheets — the visual source of truth used to generate consistent character reference images via Seedream 5.0 for every shot.
 
 These sheets are for IMAGE GENERATION — describe ONLY what is visible. Do NOT describe personality, backstory, actions, role in the story, or what the character does. No vocal profile. This is purely a visual reference.
+
+CRITICAL FRAMING: This is a CLOSE-UP TO MID-SHOT portrait — head and shoulders only, framing from the upper chest up. DO NOT describe legs, shoes, belts, lower body, or anything below the collarbone. The portrait captures the face, neck, shoulders, and upper chest. Every detail you write must be visible within this frame.
 
 For each significant recurring character, write ONE dense descriptive paragraph covering:
 - Full given name (every character MUST have a specific, culturally appropriate name — never "Man", "Woman", "Elder", or generic labels)
 - Ethnicity / race
 - Age and apparent age
-- Build / body type and height
+- Build / body type as visible from the shoulders up (e.g. broad shoulders, slender neck, thick neck, slight frame)
 - Skin tone, complexion, texture (e.g. warm olive with freckles across the nose)
 - Face shape (e.g. oval, square, heart, round, diamond)
 - Specific facial features: nose (shape, bridge width), jawline, cheekbones, brow ridge, lips (fullness, shape)
 - Eyes: shape (almond, round, hooded, monolid), colour, lash density, brow shape and thickness
 - Hair: exact colour, texture (straight, wavy, coiled, kinky), length, style, hairline
 - Distinguishing marks (ONLY IF SPECIFICALLY MENTIONED IN THE CONCEPT — if the concept does not describe a scar, mole, tattoo, or birthmark, DO NOT invent one; most people do not have visible distinguishing marks, so omit this section entirely unless the character's story explicitly includes one)
-- Clothing: ONE signature outfit — the defining look for this character's reference portrait. Pick the most iconic outfit they wear. Specific garments, fabrics, textures, colours, accessories. Do NOT list multiple outfits or "at home"/"at work" variants — those per-scene changes belong in the shot prompts, not here.
+- Clothing visible in frame: describe ONLY the collar, neckline, lapels, upper chest garment, and visible accessories like earrings or necklaces. The garment's fabric, color, texture, and cut around the shoulders/collar area. Do NOT describe pants, shoes, belts, or full garment length since they are outside the frame.
+
+End every character sheet with this Seedream 5.0 style tag: "hyperrealistic portrait photography, soft studio lighting, shallow depth of field f/1.8, 85mm lens, 4K skin texture, photorealistic"
 
 DO NOT include: personality traits, emotional state, backstory, what the character does, their job, their motivation, vocal description, or anything not visible in a still image.
 
