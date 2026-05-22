@@ -34,6 +34,8 @@ For each significant recurring character, write ONE dense descriptive paragraph 
 
 DO NOT include: personality traits, emotional state, backstory, what the character does, their job, their motivation, vocal description, or anything not visible in a still image.
 
+CRITICAL JSON RULE: The sheet text is a JSON string value. You MUST escape any double-quote characters inside the sheet description as \\". Never use unescaped double quotes within the sheet text.
+
 Output raw JSON array only — no backticks, no preamble:
 [{"name":"...","sheet":"full descriptive paragraph"}]`
 
@@ -44,6 +46,8 @@ For each significant recurring setting:
 - Lighting: sources (natural/artificial), direction, colour temperature, quality (hard/soft)
 - Mood and atmosphere, key objects, set dressing details
 - Ambient soundscape: what you'd hear standing in this space
+
+CRITICAL JSON RULE: The sheet text is a JSON string value. You MUST escape any double-quote characters inside the sheet description as \\". Never use unescaped double quotes within the sheet text.
 
 Output raw JSON array only — no backticks, no preamble:
 [{"name":"...","sheet":"full descriptive paragraph"}]`
@@ -113,8 +117,12 @@ The JSON section (raw JSON only — NO backticks, NO preamble, NO markdown code 
 {"start_frame_prompt":"...","end_frame_prompt":"...","scene_description":"0-2s: ... 2-5s: ... 5-8s: ...","visual_style":"style keywords and cinematic references","camera_movement":"choreography + intent + framing","main_subject":"subject and action","background_setting":"environment with textures, mood, key objects","lighting_mood":"lighting setup and emotional tone","audio_cue":"ambient layers, specific SFX, music bed","color_palette":"dominant colours with hex codes","dialog":"exact dialogue or None","subtitles":"ON or OFF"}`
 
 function parseJSON(raw) {
-  const s = raw.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim()
+  let s = raw.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim()
+  s = s.replace(/[\u0000-\u001F\u007F-\u009F]/g, "")
   try { return JSON.parse(s) } catch {}
+  // Repair unescaped double quotes inside long string values
+  const repaired = repairQuotes(s)
+  if (repaired) try { return JSON.parse(repaired) } catch {}
   // Try to find JSON array by looking for "[{" pattern
   const jsonStart = s.search(/\[\s*\{/)
   if (jsonStart >= 0) {
@@ -122,6 +130,8 @@ function parseJSON(raw) {
     try { return JSON.parse(fromStart) } catch {}
     const arr = fromStart.match(/\[[\s\S]*\]/)
     if (arr) try { return JSON.parse(arr[0]) } catch {}
+    const repaired2 = repairQuotes(fromStart)
+    if (repaired2) try { return JSON.parse(repaired2) } catch {}
   }
   const firstBracket = s.indexOf("[")
   if (firstBracket >= 0 && firstBracket !== jsonStart) {
@@ -156,6 +166,36 @@ function parseJSON(raw) {
     }
   }
   return null
+}
+
+function repairQuotes(s) {
+  // Heal unescaped double quotes inside "sheet" string values
+  if (!s.includes('"sheet"')) return null
+  try {
+    let fixed = s
+    // Match "sheet":"..." and escape inner quotes
+    fixed = fixed.replace(/"sheet"\s*:\s*"/g, (m) => {
+      // Find the matching end quote before }, or ]}
+      const start = m.length
+      const rest = s.slice(s.indexOf(m) + start)
+      let depth = 1, i = 0
+      for (; i < rest.length; i++) {
+        if (rest[i] === '"' && rest[i-1] !== '\\') {
+          // Check if this quote is followed by } or ,}
+          const after = rest.slice(i + 1).trim()
+          if (after.startsWith('}') || after.startsWith(']}')) {
+            depth--
+            if (depth === 0) break
+          } else {
+            depth = 1
+          }
+        }
+      }
+      const value = rest.slice(0, i).replace(/"/g, '\\"')
+      return '"sheet":"' + value
+    })
+    return fixed !== s ? fixed : null
+  } catch { return null }
 }
 
 function parseShot(raw) {
