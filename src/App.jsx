@@ -294,7 +294,7 @@ function SheetPanel({ characters, locations, onRefreshChar, onRefreshLoc, regene
                       style={{ flex: 1, padding: "4px 8px", borderRadius: 4, border: "1px solid var(--color-border-primary)", background: "var(--color-background-secondary)", color: "var(--color-text-primary)", fontFamily: "var(--font-sans)", fontSize: "0.73rem", outline: "none" }}
                       autoFocus />
                     <button onClick={doRegen}
-                      style={{ background: amber, color: "#fff", border: "none", padding: "4px 10px", borderRadius: 4, fontSize: "0.73rem", fontWeight: 600, cursor: "pointer", fontFamily: "var(--font-sans)" }}>Go</button>
+                      style={{ background: "#B8942A", color: "#fff", border: "none", padding: "4px 10px", borderRadius: 4, fontSize: "0.73rem", fontWeight: 600, cursor: "pointer", fontFamily: "var(--font-sans)" }}>Go</button>
                     <button onClick={cancelRegen}
                       style={{ background: "transparent", border: "1px solid var(--color-border-primary)", color: "var(--color-text-secondary)", padding: "4px 8px", borderRadius: 4, fontSize: "0.73rem", cursor: "pointer", fontFamily: "var(--font-sans)" }}>✕</button>
                   </div>
@@ -330,7 +330,7 @@ function SheetPanel({ characters, locations, onRefreshChar, onRefreshLoc, regene
                       style={{ flex: 1, padding: "4px 8px", borderRadius: 4, border: "1px solid var(--color-border-primary)", background: "var(--color-background-secondary)", color: "var(--color-text-primary)", fontFamily: "var(--font-sans)", fontSize: "0.73rem", outline: "none" }}
                       autoFocus />
                     <button onClick={doRegen}
-                      style={{ background: amber, color: "#fff", border: "none", padding: "4px 10px", borderRadius: 4, fontSize: "0.73rem", fontWeight: 600, cursor: "pointer", fontFamily: "var(--font-sans)" }}>Go</button>
+                      style={{ background: "#B8942A", color: "#fff", border: "none", padding: "4px 10px", borderRadius: 4, fontSize: "0.73rem", fontWeight: 600, cursor: "pointer", fontFamily: "var(--font-sans)" }}>Go</button>
                     <button onClick={cancelRegen}
                       style={{ background: "transparent", border: "1px solid var(--color-border-primary)", color: "var(--color-text-secondary)", padding: "4px 8px", borderRadius: 4, fontSize: "0.73rem", cursor: "pointer", fontFamily: "var(--font-sans)" }}>✕</button>
                   </div>
