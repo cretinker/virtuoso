@@ -253,10 +253,20 @@ function ErrorBanner({ err, onDismiss }) {
   )
 }
 
-function SheetPanel({ characters, locations, onRefreshChar }) {
+function SheetPanel({ characters, locations, onRefreshChar, onRefreshLoc, regenerateInput, setRegenerateInput, regenerateNote, setRegenerateNote }) {
   const [copied, setCopied] = useState("")
   const gridTwo = (characters.length > 1 || locations.length > 1)
   const grid = gridTwo ? { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 } : { display: "flex", flexDirection: "column", gap: 16 }
+  const activeRegen = regenerateInput
+  const startRegen = (type, name) => { setRegenerateInput({type, name}); setRegenerateNote("") }
+  const cancelRegen = () => setRegenerateInput(null)
+  const doRegen = () => {
+    if (!activeRegen) return
+    if (activeRegen.type === "char") onRefreshChar(activeRegen.name, regenerateNote)
+    else if (activeRegen.type === "loc") onRefreshLoc(activeRegen.name, regenerateNote)
+    setRegenerateInput(null)
+    setRegenerateNote("")
+  }
   return (
     <div>
       {characters.length > 0 && (
@@ -270,13 +280,25 @@ function SheetPanel({ characters, locations, onRefreshChar }) {
                   <div style={{ display: "flex", gap: 6 }}>
                     <CopyButton shotKey={"char" + i} label="Copy" copied={copied} setCopied={setCopied} text={c.sheet} />
                     {onRefreshChar && (
-                      <button onClick={() => onRefreshChar(c.name)}
+                      <button onClick={() => startRegen("char", c.name)}
                         style={{ background: "transparent", border: "1px solid var(--color-border-primary)", color: "var(--color-text-secondary)", padding: "3px 10px", borderRadius: 4, fontSize: "0.72rem", cursor: "pointer", fontFamily: "var(--font-sans)" }}>
                         &#8635;
                       </button>
                     )}
                   </div>
                 </div>
+                {activeRegen && activeRegen.type === "char" && activeRegen.name === c.name && (
+                  <div style={{ marginBottom: 8, display: "flex", gap: 6 }}>
+                    <input value={regenerateNote} onChange={e => setRegenerateNote(e.target.value)} placeholder="Optional: what to change..."
+                      onKeyDown={e => { if (e.key === "Enter") doRegen() }}
+                      style={{ flex: 1, padding: "4px 8px", borderRadius: 4, border: "1px solid var(--color-border-primary)", background: "var(--color-background-secondary)", color: "var(--color-text-primary)", fontFamily: "var(--font-sans)", fontSize: "0.73rem", outline: "none" }}
+                      autoFocus />
+                    <button onClick={doRegen}
+                      style={{ background: amber, color: "#fff", border: "none", padding: "4px 10px", borderRadius: 4, fontSize: "0.73rem", fontWeight: 600, cursor: "pointer", fontFamily: "var(--font-sans)" }}>Go</button>
+                    <button onClick={cancelRegen}
+                      style={{ background: "transparent", border: "1px solid var(--color-border-primary)", color: "var(--color-text-secondary)", padding: "4px 8px", borderRadius: 4, fontSize: "0.73rem", cursor: "pointer", fontFamily: "var(--font-sans)" }}>✕</button>
+                  </div>
+                )}
                 <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.75rem", color: "var(--color-text-secondary)", lineHeight: 1.8, whiteSpace: "pre-wrap" }}>{c.sheet}</div>
               </div>
             ))}
@@ -291,8 +313,28 @@ function SheetPanel({ characters, locations, onRefreshChar }) {
               <div key={i} style={{ background: "var(--color-background-card)", border: "1px solid var(--color-border-primary)", borderRadius: 8, padding: 14 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
                   <span style={{ fontSize: "0.88rem", fontWeight: 600, color: "var(--color-text-primary)" }}>{l.name}</span>
-                  <CopyButton shotKey={"loc" + i} label="Copy" copied={copied} setCopied={setCopied} text={l.sheet} />
+                  <div style={{ display: "flex", gap: 6 }}>
+                    <CopyButton shotKey={"loc" + i} label="Copy" copied={copied} setCopied={setCopied} text={l.sheet} />
+                    {onRefreshLoc && (
+                      <button onClick={() => startRegen("loc", l.name)}
+                        style={{ background: "transparent", border: "1px solid var(--color-border-primary)", color: "var(--color-text-secondary)", padding: "3px 10px", borderRadius: 4, fontSize: "0.72rem", cursor: "pointer", fontFamily: "var(--font-sans)" }}>
+                        &#8635;
+                      </button>
+                    )}
+                  </div>
                 </div>
+                {activeRegen && activeRegen.type === "loc" && activeRegen.name === l.name && (
+                  <div style={{ marginBottom: 8, display: "flex", gap: 6 }}>
+                    <input value={regenerateNote} onChange={e => setRegenerateNote(e.target.value)} placeholder="Optional: what to change..."
+                      onKeyDown={e => { if (e.key === "Enter") doRegen() }}
+                      style={{ flex: 1, padding: "4px 8px", borderRadius: 4, border: "1px solid var(--color-border-primary)", background: "var(--color-background-secondary)", color: "var(--color-text-primary)", fontFamily: "var(--font-sans)", fontSize: "0.73rem", outline: "none" }}
+                      autoFocus />
+                    <button onClick={doRegen}
+                      style={{ background: amber, color: "#fff", border: "none", padding: "4px 10px", borderRadius: 4, fontSize: "0.73rem", fontWeight: 600, cursor: "pointer", fontFamily: "var(--font-sans)" }}>Go</button>
+                    <button onClick={cancelRegen}
+                      style={{ background: "transparent", border: "1px solid var(--color-border-primary)", color: "var(--color-text-secondary)", padding: "4px 8px", borderRadius: 4, fontSize: "0.73rem", cursor: "pointer", fontFamily: "var(--font-sans)" }}>✕</button>
+                  </div>
+                )}
                 <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.75rem", color: "var(--color-text-secondary)", lineHeight: 1.8, whiteSpace: "pre-wrap" }}>{l.sheet}</div>
               </div>
             ))}
@@ -337,6 +379,8 @@ export default function App() {
   const [tabs, setTabs] = useState({})
   const [sheetsOpen, setSheetsOpen] = useState(false)
   const [copied, setCopied] = useState("")
+  const [regenerateInput, setRegenerateInput] = useState(null)
+  const [regenerateNote, setRegenerateNote] = useState("")
   const [projectName, setProjectName] = useState("")
   const [savedProjects, setSavedProjects] = useState(() => {
     try { return Object.keys(JSON.parse(localStorage.getItem("vpv_projects") || "{}")) } catch { return [] }
@@ -377,7 +421,7 @@ export default function App() {
   const resetAll = () => {
     setStep(1); setConcept(""); setScenes([]); setCharacters([]); setLocations([])
     setShots([]); setBusy(false); setLoadMsg(""); setErr(""); setExpanded(null)
-    setTabs({}); setSheetsOpen(false); setCopied(""); setProjectName("")
+    setTabs({}); setSheetsOpen(false); setCopied(""); setRegenerateInput(null); setRegenerateNote(""); setProjectName("")
   }
 
   async function callAPI(system, userMsg, tokens = 8192) {
@@ -438,11 +482,12 @@ export default function App() {
     else { buildSheets() }
   }
 
-  const refreshChar = async (charName) => {
+  const refreshChar = async (charName, instruction = "") => {
     setBusy(true); setLoadMsg("Regenerating " + charName); setErr("")
     const sceneText = scenes.map(s => s.number + ". " + s.title + " - " + s.description + " (Characters: " + (s.characters || []).join(", ") + ", Location: " + s.location + ")").join("\n")
     const existingChars = characters.filter(c => c.name !== charName).map(c => "[CHARACTER: " + c.name + "]\n" + c.sheet).join("\n\n")
-    const userMsg = "CONCEPT:\n" + concept + "\n\nSCENES:\n" + sceneText + "\n\nEXISTING CHARACTERS (do NOT recreate these):\n" + existingChars + "\n\nREGENERATE ONLY: " + charName
+    let userMsg = "CONCEPT:\n" + concept + "\n\nSCENES:\n" + sceneText + "\n\nEXISTING CHARACTERS (do NOT recreate these):\n" + existingChars + "\n\nREGENERATE ONLY: " + charName
+    if (instruction) userMsg += "\n\nREGENERATION INSTRUCTIONS: " + instruction
     try {
       const raw = await callAPI(CHAR_SHEETS_PROMPT, userMsg, 8192)
       const parsed = parseJSON(raw)
@@ -450,6 +495,23 @@ export default function App() {
       const updated = parsed.find(c => c.name === charName)
       if (!updated) throw new Error("Regenerated response did not contain " + charName)
       setCharacters(prev => { const next = prev.map(c => c.name === charName ? updated : c); persist({ characters: next }); return next })
+    } catch (e) { setErr(e.message) }
+    finally { setBusy(false); setLoadMsg("") }
+  }
+
+  const refreshLoc = async (locName, instruction = "") => {
+    setBusy(true); setLoadMsg("Regenerating " + locName); setErr("")
+    const sceneText = scenes.map(s => s.number + ". " + s.title + " - " + s.description + " (Characters: " + (s.characters || []).join(", ") + ", Location: " + s.location + ")").join("\n")
+    const existingLocs = locations.filter(l => l.name !== locName).map(l => "[LOCATION: " + l.name + "]\n" + l.sheet).join("\n\n")
+    let userMsg = "CONCEPT:\n" + concept + "\n\nSCENES:\n" + sceneText + "\n\nEXISTING LOCATIONS (do NOT recreate these):\n" + existingLocs + "\n\nREGENERATE ONLY: " + locName
+    if (instruction) userMsg += "\n\nREGENERATION INSTRUCTIONS: " + instruction
+    try {
+      const raw = await callAPI(LOC_SHEETS_PROMPT, userMsg, 8192)
+      const parsed = parseJSON(raw)
+      if (!parsed || !Array.isArray(parsed) || parsed.length === 0) throw new Error("Location parse failed")
+      const updated = parsed.find(l => l.name === locName)
+      if (!updated) throw new Error("Regenerated response did not contain " + locName)
+      setLocations(prev => { const next = prev.map(l => l.name === locName ? updated : l); persist({ locations: next }); return next })
     } catch (e) { setErr(e.message) }
     finally { setBusy(false); setLoadMsg("") }
   }
@@ -593,7 +655,7 @@ export default function App() {
               &#8592; Back to Scenes
             </button>
           </div>
-          <SheetPanel characters={characters} locations={locations} onRefreshChar={refreshChar} />
+          <SheetPanel characters={characters} locations={locations} onRefreshChar={refreshChar} onRefreshLoc={refreshLoc} regenerateInput={regenerateInput} setRegenerateInput={setRegenerateInput} regenerateNote={regenerateNote} setRegenerateNote={setRegenerateNote} />
           <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
             {locations.length === 0 && (
               <button className="btn-ghost" onClick={buildSheets}
@@ -634,7 +696,7 @@ export default function App() {
           )}
           {sheetsOpen && (
             <div style={{ background: "var(--color-background-card)", border: "1px solid var(--color-border-primary)", borderRadius: 8, padding: 16, marginBottom: 16 }}>
-              <SheetPanel characters={characters} locations={locations} onRefreshChar={refreshChar} />
+              <SheetPanel characters={characters} locations={locations} onRefreshChar={refreshChar} onRefreshLoc={refreshLoc} regenerateInput={regenerateInput} setRegenerateInput={setRegenerateInput} regenerateNote={regenerateNote} setRegenerateNote={setRegenerateNote} />
             </div>
           )}
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
