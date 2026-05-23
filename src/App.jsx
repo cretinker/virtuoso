@@ -62,57 +62,47 @@ CRITICAL JSON RULE: The sheet text is a JSON string value. You MUST escape any d
 Output raw JSON array only — no backticks, no preamble:
 [{"name":"...","sheet":"full descriptive paragraph"}]`
 
-const SHOT_PROMPT = `You are the Grok Imagine Prompt Virtuoso — a cinematic video prompt engineer. Using the provided master sheets as your visual source of truth, generate a complete shot prompt for ONE scene optimized for Grok Imagine video generation.
+const SHOT_PROMPT = `You are the Grok Imagine Prompt Virtuoso. Using the provided master sheets as your visual source of truth, generate a complete image-to-video prompt for ONE scene.
+
+The workflow: the user already has a character reference image (from the character master sheet) and a location reference image (from the location master sheet). Your job is to write the text prompt that Grok Imagine's image-to-video mode will use to animate the character in the location.
 
 === CRITICAL FORMAT RULE — READ FIRST ===
 Your ENTIRE response must contain exactly TWO things separated by the literal string ---JSON--- on its own line and NOTHING ELSE:
-  1. One flowing cinematic paragraph (50-100 words) — the Grok Imagine video prompt
-  2. Raw JSON object (the Seedream 5.0 frame/image prompts + metadata)
-Example format (do NOT include angle brackets):
-<cinematic paragraph text>
+  1. One thorough image-to-video prompt — the text that feeds Grok Imagine with the reference images
+  2. Raw JSON object (structured breakdown of the prompt)
+Example format:
+<image-to-video prompt text>
 ---JSON---
-{"start_frame_prompt":"...","end_frame_prompt":"...","grok_prompt":"...",...}
-NO headers. NO labels. NO "SECTION 1". NO preamble. NO commentary. NO markdown formatting. NO backticks around the JSON. If your response starts with anything other than the first word of the cinematic paragraph, you have FAILED.
+{"character_description":"...","location_description":"...","action":"...","camera_movement":"...","audio":"..."}
+NO headers. NO labels. NO "SECTION 1". NO preamble. NO commentary. NO markdown formatting. NO backticks around the JSON. If your response starts with anything other than the first word of the prompt, you have FAILED.
 
-=== VIDEO PARAGRAPH — 50-100 words of flowing cinematic prose for Grok Imagine: ===
-Drop directly into the visual. No "the shot opens with." Weave these elements into ONE seamless paragraph:
-(1) VISUAL HOOK: Mood + shot type + focal length + depth of field. One powerful opening sentence.
-(2) CAMERA: Describe movement naturally — "a slow push-in tightens on her face" or "the frame drifts left to reveal" — not "dolly-in technique." Use only Grok-compatible moves: slow push-in, gentle pull-back, subtle pan, static lock-off, smooth tracking, subtle handheld. NO whip pans, crash zooms, Dutch angles, or aggressive handheld shake.
-(3) ACTION: What happens moment by moment. Precision verbs. "Her thumb hesitates over the screen then flicks downward" NOT "she scrolls." Describe micro-movements — hands, eyes, breath, posture shifts.
-(4) LIGHTING: Source named (practical lamp, window, candle, screen glow, neon, overhead fluorescent), quality (hard/soft), color temperature. Describe how light changes during the shot.
-(5) AUDIO & SOUNDSCAPE (MANDATORY — based on the scene's audio strategy): 
-    - If audio strategy is "voiceover": narrate EXACT voiceover words in quotes — "The city never sleeps, and neither do I" — with the character speaking identified by name. Describe timbre, pace, and emotional tone of the voice.
-    - If audio strategy is "dialogue": write EXACT dialogue words in quotes for each character — "Where have you been?" she asks. "Nowhere you'd believe," he replies. Describe delivery (whispered, shouted, trembling).
-    - If audio strategy is "voiceover+dialogue": include both — voiceover narration AND spoken dialogue between characters.
-    - If audio strategy is "ambient": no spoken words. Describe 2+ environmental sounds with spatial placement — "the soft hum of a refrigerator from frame left, rain tapping against the window pane off-screen right."
-    (6) END TAG: "cinematic, hyperreal, 4K film grain, 720p" — this MUST appear at the end.
+=== IMAGE-TO-VIDEO PROMPT — comprehensive, no word cap: ===
+Write ONE flowing paragraph that covers everything Grok Imagine needs. Be specific and thorough — do not summarize. Weave together:
+(1) CHARACTER: The character's appearance from their master sheet — what they look like, what they're wearing, their expression, their posture. Paint a precise visual of the person.
+(2) LOCATION: The setting from the location master sheet — materials, lighting sources, color temperature, key objects, atmosphere. Make the space feel real and lived-in.
+(3) ACTION: What happens moment by moment, starting from the still image. Precision verbs. "Her thumb hesitates over the screen then flicks downward" NOT "she scrolls." Describe micro-movements — hands, eyes, breath, posture shifts. Every beat of motion.
+(4) CAMERA: Describe movement naturally — "a slow push-in tightens on her face" or "the frame drifts left to reveal." Use only Grok-compatible moves: slow push-in, gentle pull-back, subtle pan, static lock-off, smooth tracking, subtle handheld. NO whip pans, crash zooms, Dutch angles, or aggressive handheld shake.
+(5) LIGHTING: Source named (practical lamp, window, candle, screen glow, neon, overhead fluorescent), quality (hard/soft), color temperature. Describe how light changes during the shot.
+(6) AUDIO & SOUNDSCAPE (MANDATORY — based on the scene's audio strategy): 
+    - If audio strategy is "voiceover": narrate EXACT voiceover words in quotes with the character name and vocal delivery.
+    - If audio strategy is "dialogue": write EXACT dialogue words in quotes for each character with delivery notes.
+    - If audio strategy is "voiceover+dialogue": include both.
+    - If audio strategy is "ambient": no spoken words. Describe 2+ environmental sounds with spatial placement.
+(7) END TAG: "cinematic, hyperreal, 4K film grain, 720p" — this MUST appear at the end.
 
 === FORBIDDEN: ===
 - "The shot opens on..." or "The shot begins..."
 - Generic lighting ("warm lighting")
 - Camera technique jargon or rubric naming
-- Writing more than 120 words
 - Skipping audio — every shot MUST include audio matching its declared strategy
+- Summarizing — be thorough, not brief
 
 Specific numbers (85mm, f/1.8) are fine — avoid technique labels like "dolly-in," "rack focus," or "Dutch angle."
-
-=== START & END FRAME PROMPTS — for Seedream 5.0 image generation (after ---JSON---): ===
-These are TWO frozen moments from the SAME continuous shot — like hitting pause at the beginning and then at the end of the clip. They share the same location, same lighting setup, same lens, same focal length, same composition. The only difference is where the action has progressed within the frame.
-
-CRITICAL: Start and end frames MUST be a direct pair from ONE shot. The end frame is NOT a new scene, NOT a different camera angle, NOT a new concept. It is simply what the viewer sees after the camera movement and action have played out within this same shot.
-
-Seedream 5.0 uses Deep Thinking — it reasons through prompts before generating. Therefore these prompts should be rich with specific detail: exact spatial positions, material textures, lighting specifics.
-
-start_frame_prompt: The EXACT visual state of frame 1 BEFORE the action begins. The establishing moment — subject's starting position, pre-movement pose, initial expression. Describe: subject pose + exact position in frame + expression, lighting (direction, quality, color temperature, source type), lens + focal length + depth of field, compositional rule, color palette with hex codes. Include Seedream keywords: "hyperrealistic, cinematic lighting, 4K texture detail, photorealistic depth of field."
-
-end_frame_prompt: The EXACT visual state of the last frame AFTER the action resolves WITHIN THIS SAME SHOT. Same framing, same lens, same focal length, same depth of field — only the subject position, lighting state, and emotion have progressed. Describe the positional progression clearly: where the subject moved from and to (e.g. "Start: subject in doorway, hand gripping frame. End: subject at window, palm pressed flat against glass."). Include Seedream keywords: "hyperrealistic, cinematic lighting, 4K texture detail, photorealistic depth of field."
-
-image_to_video_prompt: A thorough Grok Imagine image-to-video prompt. This mode takes a character reference image as the starting frame and animates from it. Cover in detail: (a) the character's appearance from their master sheet (what they look like, what they're wearing, their expression), (b) the location from its master sheet (materials, lighting, key objects, atmosphere), (c) the action — moment by moment, precisely what happens starting from the still image, (d) camera movement (Grok-compatible only), (e) audio per the scene's audio strategy. Be specific and thorough — do not summarize. End with "cinematic, hyperreal, 4K film grain, 720p."
 
 ---JSON---
 
 The JSON section (raw JSON only — NO backticks, NO preamble, NO markdown code fences):
-{"start_frame_prompt":"...","end_frame_prompt":"...","image_to_video_prompt":"...","scene_description":"0-2s: ... 2-5s: ... 5-8s: ...","visual_style":"style keywords and cinematic references","camera_movement":"choreography + intent + framing","main_subject":"subject and action","background_setting":"environment with textures, mood, key objects","lighting_mood":"lighting setup and emotional tone","audio_cue":"ambient layers, specific SFX, music bed","color_palette":"dominant colours with hex codes","dialog":"exact dialogue or None","subtitles":"ON or OFF"}`
+{"character_description":"character appearance from master sheet","location_description":"location from master sheet","action":"what happens moment by moment","camera_movement":"camera choreography and framing","audio":"dialogue/voiceover/ambient per audio strategy","visual_style":"cinematic references and keywords","color_palette":"dominant colours with hex codes"}`
 
 function parseJSON(raw) {
   let s = raw.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim()
@@ -644,7 +634,7 @@ export default function App() {
   const toggleExpand = (i) => {
     if (shots[i].status !== "done" && shots[i].status !== "error") return
     setExpanded(expanded === i ? null : i)
-    if (expanded !== i) { setTabs(prev => ({ ...prev, [i]: prev[i] || "images" })) }
+    if (expanded !== i) { setTabs(prev => ({ ...prev, [i]: prev[i] || "video" })) }
   }
 
   const doneCount = shots.filter(s => s.status === "done").length
@@ -786,66 +776,33 @@ export default function App() {
                   </div>
                   {isExpanded && canExpand && (
                     <div style={{ borderTop: "1px solid var(--color-border-primary)", padding: 16 }}>
-                      <div style={{ display: "flex", gap: 0, marginBottom: 16 }}>
-                         {["images", "video", "image-to-video", "json"].map(tab => (
+                       <div style={{ display: "flex", gap: 0, marginBottom: 16 }}>
+                         {["video", "json"].map(tab => (
                           <button key={tab} onClick={(e) => { e.stopPropagation(); setTabs(prev => ({ ...prev, [i]: tab })) }}
-                            style={{ background: (tabs[i] || "images") === tab ? amber : "transparent", color: (tabs[i] || "images") === tab ? "#fff" : "var(--color-text-secondary)", border: (tabs[i] || "images") === tab ? "1px solid " + amber : "1px solid var(--color-border-primary)", padding: "6px 16px", borderRadius: 4, fontSize: "0.76rem", fontWeight: 500, cursor: "pointer", fontFamily: "var(--font-sans)" }}>
-                            {tab === "images" ? "Image Prompts" : tab === "video" ? "Video Prompt" : tab === "image-to-video" ? "Image-to-Video" : "JSON"}
+                            style={{ background: (tabs[i] || "video") === tab ? amber : "transparent", color: (tabs[i] || "video") === tab ? "#fff" : "var(--color-text-secondary)", border: (tabs[i] || "video") === tab ? "1px solid " + amber : "1px solid var(--color-border-primary)", padding: "6px 16px", borderRadius: 4, fontSize: "0.76rem", fontWeight: 500, cursor: "pointer", fontFamily: "var(--font-sans)" }}>
+                            {tab === "video" ? "Image-to-Video Prompt" : "JSON"}
                           </button>
                         ))}
                       </div>
-                      {(tabs[i] || "images") === "images" && (
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-                          <div style={{ background: "var(--color-background-secondary)", borderRadius: 8, padding: 14, border: "1px solid var(--color-border-primary)" }}>
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                              <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--color-text-info)" }}>&#9679; Start Frame</span>
-                              {shot.json?.start_frame_prompt && <CopyButton shotKey={"sf" + i} label="Copy" copied={copied} setCopied={setCopied} text={shot.json.start_frame_prompt} />}
-                            </div>
-                            {shot.json?.start_frame_prompt
-                              ? <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.73rem", color: "var(--color-text-secondary)", lineHeight: 1.8, whiteSpace: "pre-wrap" }}>{shot.json.start_frame_prompt}</div>
-                              : <div style={{ fontSize: "0.78rem", color: "var(--color-text-tertiary)", fontStyle: "italic" }}>Frame prompt unavailable - response may be truncated. See Video Prompt tab.</div>}
-                          </div>
-                          <div style={{ background: "var(--color-background-secondary)", borderRadius: 8, padding: 14, border: "1px solid var(--color-border-primary)" }}>
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                              <span style={{ fontSize: "0.75rem", fontWeight: 600, color: amber }}>&#9679; End Frame</span>
-                              {shot.json?.end_frame_prompt && <CopyButton shotKey={"ef" + i} label="Copy" copied={copied} setCopied={setCopied} text={shot.json.end_frame_prompt} />}
-                            </div>
-                            {shot.json?.end_frame_prompt
-                              ? <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.73rem", color: "var(--color-text-secondary)", lineHeight: 1.8, whiteSpace: "pre-wrap" }}>{shot.json.end_frame_prompt}</div>
-                              : <div style={{ fontSize: "0.78rem", color: "var(--color-text-tertiary)", fontStyle: "italic" }}>Frame prompt unavailable - response may be truncated. See Video Prompt tab.</div>}
-                          </div>
-                        </div>
-                      )}
-                      {(tabs[i] || "images") === "video" && (
+                      {(tabs[i] || "video") === "video" && (
                         <div style={{ background: "var(--color-background-secondary)", borderRadius: 8, padding: 14, border: "1px solid #B8942A" }}>
                           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                            <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "#B8942A" }}>GROK IMAGINE VIDEO PROMPT</span>
+                            <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "#B8942A" }}>GROK IMAGE-TO-VIDEO PROMPT</span>
                             {shot.text && <CopyButton shotKey={"tx" + i} label="Copy" copied={copied} setCopied={setCopied} text={shot.text} />}
                           </div>
                           {shot.text
                             ? <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.73rem", color: "var(--color-text-secondary)", lineHeight: 1.9, whiteSpace: "pre-wrap" }}>{shot.text}</div>
-                            : <div style={{ fontSize: "0.78rem", color: "var(--color-text-tertiary)", fontStyle: "italic" }}>No video prompt available.</div>}
+                            : <div style={{ fontSize: "0.78rem", color: "var(--color-text-tertiary)", fontStyle: "italic" }}>No prompt available. Regenerate the shot.</div>}
                         </div>
                       )}
-                      {(tabs[i] || "images") === "image-to-video" && (
-                        <div style={{ background: "var(--color-background-secondary)", borderRadius: 8, padding: 14, border: "1px solid var(--color-border-info)" }}>
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                            <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--color-text-info)" }}>GROK IMAGE-TO-VIDEO PROMPT</span>
-                            {shot.json?.image_to_video_prompt && <CopyButton shotKey={"i2v" + i} label="Copy" copied={copied} setCopied={setCopied} text={shot.json.image_to_video_prompt} />}
-                          </div>
-                          {shot.json?.image_to_video_prompt
-                            ? <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.73rem", color: "var(--color-text-secondary)", lineHeight: 1.9, whiteSpace: "pre-wrap" }}>{shot.json.image_to_video_prompt}</div>
-                            : <div style={{ fontSize: "0.78rem", color: "var(--color-text-tertiary)", fontStyle: "italic" }}>Image-to-video prompt unavailable. Regenerate to include it.</div>}
-                        </div>
-                      )}
-                      {(tabs[i] || "images") === "json" && (
+                      {(tabs[i] || "video") === "json" && (
                         <div style={{ background: "var(--color-background-secondary)", borderRadius: 8, padding: 14, border: "1px solid var(--color-border-primary)" }}>
                           <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
                             {shot.json && <CopyButton shotKey={"js" + i} label="Copy" copied={copied} setCopied={setCopied} text={JSON.stringify(shot.json, null, 2)} />}
                           </div>
                           {shot.json
                             ? <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.73rem", color: "var(--color-text-secondary)", lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{JSON.stringify(shot.json, null, 2)}</div>
-                            : <div style={{ fontSize: "0.78rem", color: "var(--color-text-tertiary)", fontStyle: "italic" }}>No structured JSON available. The Video Prompt tab still contains the full script.</div>}
+                            : <div style={{ fontSize: "0.78rem", color: "var(--color-text-tertiary)", fontStyle: "italic" }}>No structured JSON available. The prompt tab contains the full script.</div>}
                         </div>
                       )}
                     </div>
