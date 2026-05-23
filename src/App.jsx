@@ -254,16 +254,16 @@ function Header({ step, onNewProject, projectName, setProjectName, onSave, onLoa
   )
 }
 
-function Stepper({ step, loadMsg }) {
+function Stepper({ step, loadMsg, onStepClick }) {
   const steps = ["Concept", "Scenes", "Master Sheets", "Shot Prompts"]
   const amber = "#B8942A"
   return (
     <div style={{ display: "flex", alignItems: "center", marginBottom: 20 }}>
       {steps.map((label, i) => {
-        const num = i + 1; const done = step > num; const active = step === num
+        const num = i + 1; const done = step > num; const active = step === num; const reachable = done || active
         return (
           <div key={i} style={{ display: "flex", alignItems: "center", flex: i < 3 ? 1 : "none" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <div onClick={() => reachable && onStepClick(num)} style={{ display: "flex", alignItems: "center", gap: 6, cursor: reachable ? "pointer" : "default" }}>
               <div style={{ width: 24, height: 24, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.7rem", fontWeight: 700, flexShrink: 0,
                 background: done ? amber : "transparent", border: done ? "2px solid " + amber : active ? "2px solid " + amber : "2px solid var(--color-border-secondary)", color: done ? "#fff" : active ? amber : "var(--color-text-tertiary)" }}>
                 {done ? "\u2713" : num}
@@ -650,7 +650,7 @@ export default function App() {
   return (
     <div style={{ maxWidth: 880, margin: "0 auto", padding: "20px 24px 60px" }}>
       <Header step={step} onNewProject={resetAll} projectName={projectName} setProjectName={setProjectName} onSave={persist} onLoad={loadProject} onDelete={deleteProject} savedProjects={savedProjects} />
-      <Stepper step={step} loadMsg={loadMsg} />
+      <Stepper step={step} loadMsg={loadMsg} onStepClick={(n) => setStep(n)} />
       <ErrorBanner err={err} onDismiss={() => setErr("")} />
 
       {step === 1 && (
