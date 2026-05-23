@@ -7,6 +7,7 @@ For each scene define:
 - What happens in this shot (action, movement, mood — 1-2 sentences)
 - Which named characters appear
 - Which named location it takes place in
+- Audio strategy for this scene — analyze the concept and decide which applies: "voiceover" (narrator speaking over visuals), "dialogue" (characters speaking to each other), "voiceover+dialogue" (both), or "ambient" (no spoken words, only environmental sound)
 
 CRITICAL RULES:
 - Each scene must be ONE continuous shot in ONE location with ONE focused action. No montages, no time-lapses, no cross-cutting between locations, no "series of quick cuts" or "sequence showing." If you need to show multiple moments or locations, make them separate scenes.
@@ -15,7 +16,7 @@ CRITICAL RULES:
 - Include specific material textures and light sources in scene descriptions (e.g. "water-stained concrete floor reflecting a 2700K brass table lamp") — these feed directly into Seedream 5.0 image generation.
 
 Output raw JSON array only — no backticks, no preamble, no commentary, just the array:
-[{"number":1,"title":"Scene title","description":"What happens","characters":["Character name"],"location":"Location name"}]`
+[{"number":1,"title":"Scene title","description":"What happens","characters":["Character name"],"location":"Location name","audio":"voiceover|dialogue|voiceover+dialogue|ambient"}]`
 
 const CHAR_SHEETS_PROMPT = `You are the Grok Imagine Prompt Virtuoso. Given a concept and scene breakdown, generate Character Master Sheets — the visual source of truth used to generate consistent character reference images via Seedream 5.0 for every shot.
 
@@ -78,10 +79,11 @@ Drop directly into the visual. No "the shot opens with." Weave these elements in
 (2) CAMERA: Describe movement naturally — "a slow push-in tightens on her face" or "the frame drifts left to reveal" — not "dolly-in technique." Use only Grok-compatible moves: slow push-in, gentle pull-back, subtle pan, static lock-off, smooth tracking, subtle handheld. NO whip pans, crash zooms, Dutch angles, or aggressive handheld shake.
 (3) ACTION: What happens moment by moment. Precision verbs. "Her thumb hesitates over the screen then flicks downward" NOT "she scrolls." Describe micro-movements — hands, eyes, breath, posture shifts.
 (4) LIGHTING: Source named (practical lamp, window, candle, screen glow, neon, overhead fluorescent), quality (hard/soft), color temperature. Describe how light changes during the shot.
-(5) AUDIO & SOUNDSCAPE (MANDATORY — every shot MUST include audio): Weave in at least 2 of:
-    - Diegetic sounds with spatial placement: "the soft plastic click of a phone case from frame left," "distant muffled laughter bleeding through the wall"
-    - Dialogue or voice-over: if the scene has speaking, include EXACT words in quotes — "I've been waiting for this" — spoken by the named character
-    - Ambient atmosphere: room tone, weather, machinery hum, crowd murmur, nature sounds — named and placed in the space
+(5) AUDIO & SOUNDSCAPE (MANDATORY — based on the scene's audio strategy): 
+    - If audio strategy is "voiceover": narrate EXACT voiceover words in quotes — "The city never sleeps, and neither do I" — with the character speaking identified by name. Describe timbre, pace, and emotional tone of the voice.
+    - If audio strategy is "dialogue": write EXACT dialogue words in quotes for each character — "Where have you been?" she asks. "Nowhere you'd believe," he replies. Describe delivery (whispered, shouted, trembling).
+    - If audio strategy is "voiceover+dialogue": include both — voiceover narration AND spoken dialogue between characters.
+    - If audio strategy is "ambient": no spoken words. Describe 2+ environmental sounds with spatial placement — "the soft hum of a refrigerator from frame left, rain tapping against the window pane off-screen right."
     (6) END TAG: "cinematic, hyperreal, 4K film grain, 720p" — this MUST appear at the end.
 
 === FORBIDDEN: ===
@@ -89,7 +91,7 @@ Drop directly into the visual. No "the shot opens with." Weave these elements in
 - Generic lighting ("warm lighting")
 - Camera technique jargon or rubric naming
 - Writing more than 120 words
-- Skipping audio entirely — every shot MUST have sound
+- Skipping audio — every shot MUST include audio matching its declared strategy
 
 Specific numbers (85mm, f/1.8) are fine — avoid technique labels like "dolly-in," "rack focus," or "Dutch angle."
 
@@ -579,7 +581,7 @@ export default function App() {
       setLoadMsg("Generating shot " + (i + 1) + " of " + scenes.length)
       setShots(prev => prev.map((s, idx) => idx === i ? { ...s, status: "loading", errMsg: "" } : s))
       const s = scenes[i]
-      const userMsg = context + "\n\nSCENE " + s.number + " - " + s.title + "\n" + s.description + "\nCharacters: " + (s.characters || []).join(", ") + "\nLocation: " + s.location
+      const userMsg = context + "\n\nSCENE " + s.number + " - " + s.title + "\n" + s.description + "\nCharacters: " + (s.characters || []).join(", ") + "\nLocation: " + s.location + "\nAudio Strategy: " + (s.audio || "ambient")
       try {
         const raw = await callAPI(SHOT_PROMPT, userMsg, 16384)
         const parsed = parseShot(raw)
@@ -624,7 +626,7 @@ export default function App() {
       setLoadMsg("Generating shot " + (i + 1) + " of " + shots.length)
       setShots(prev => prev.map((s, idx) => idx === i ? { ...s, status: "loading", errMsg: "" } : s))
       const s = scenes[i]
-      const userMsg = context + "\n\nSCENE " + s.number + " - " + s.title + "\n" + s.description + "\nCharacters: " + (s.characters || []).join(", ") + "\nLocation: " + s.location
+      const userMsg = context + "\n\nSCENE " + s.number + " - " + s.title + "\n" + s.description + "\nCharacters: " + (s.characters || []).join(", ") + "\nLocation: " + s.location + "\nAudio Strategy: " + (s.audio || "ambient")
       try {
         const raw = await callAPI(SHOT_PROMPT, userMsg, 16384)
         const parsed = parseShot(raw)
