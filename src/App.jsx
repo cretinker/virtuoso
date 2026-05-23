@@ -63,9 +63,13 @@ Output raw JSON array only — no backticks, no preamble:
 const SHOT_PROMPT = `You are the Grok Imagine Prompt Virtuoso — a cinematic video prompt engineer. Using the provided master sheets as your visual source of truth, generate a complete shot prompt for ONE scene optimized for Grok Imagine video generation.
 
 === CRITICAL FORMAT RULE — READ FIRST ===
-Your ENTIRE response must contain exactly TWO things separated by ---JSON--- and NOTHING ELSE:
+Your ENTIRE response must contain exactly TWO things separated by the literal string ---JSON--- on its own line and NOTHING ELSE:
   1. One flowing cinematic paragraph (50-100 words) — the Grok Imagine video prompt
-  2. Raw JSON (the Seedream 5.0 frame/image prompts + metadata)
+  2. Raw JSON object (the Seedream 5.0 frame/image prompts + metadata)
+Example format (do NOT include angle brackets):
+<cinematic paragraph text>
+---JSON---
+{"start_frame_prompt":"...","end_frame_prompt":"...","grok_prompt":"...",...}
 NO headers. NO labels. NO "SECTION 1". NO preamble. NO commentary. NO markdown formatting. NO backticks around the JSON. If your response starts with anything other than the first word of the cinematic paragraph, you have FAILED.
 
 === VIDEO PARAGRAPH — 50-100 words of flowing cinematic prose for Grok Imagine: ===
@@ -188,16 +192,8 @@ function parseShot(raw) {
   const text = parts[0]?.trim() || ""
   let json = null
   if (parts[1]) {
-    const r = parts[1].replace(/```json\n?/g, "").replace(/```\n?/g, "").trim()
-    try { json = JSON.parse(r) } catch {
-      const m = r.match(/\{[\s\S]*/)
-      if (m) {
-        const closes = ["}", '"}', '"]}', '"}]}', '"]}"}']
-        for (const end of closes) {
-          try { json = JSON.parse(m[0] + end); break } catch {}
-        }
-      }
-    }
+    const result = parseJSON(parts[1])
+    if (result && typeof result === "object" && !Array.isArray(result)) json = result
   }
   return { text, json }
 }
@@ -581,7 +577,7 @@ export default function App() {
       const s = scenes[i]
       const userMsg = context + "\n\nSCENE " + s.number + " - " + s.title + "\n" + s.description + "\nCharacters: " + (s.characters || []).join(", ") + "\nLocation: " + s.location
       try {
-        const raw = await callAPI(SHOT_PROMPT, userMsg)
+        const raw = await callAPI(SHOT_PROMPT, userMsg, 16384)
         const parsed = parseShot(raw)
         setShots(prev => { const next = prev.map((sh, idx) => idx === i ? { ...sh, status: "done", text: parsed.text, json: parsed.json, errMsg: "" } : sh); persist({ shots: next, step: 4 }); return next })
       } catch (e) {
@@ -605,7 +601,7 @@ export default function App() {
     const s = scenes[i]
     const userMsg = context + "\n\nSCENE " + s.number + " - " + s.title + "\n" + s.description + "\nCharacters: " + (s.characters || []).join(", ") + "\nLocation: " + s.location
     try {
-      const raw = await callAPI(SHOT_PROMPT, userMsg)
+      const raw = await callAPI(SHOT_PROMPT, userMsg, 16384)
       const parsed = parseShot(raw)
       setShots(prev => { const next = prev.map((sh, idx) => idx === i ? { ...sh, status: "done", text: parsed.text, json: parsed.json, errMsg: "" } : sh); persist({ shots: next, step: 4 }); return next })
     } catch (e) {
@@ -626,7 +622,7 @@ export default function App() {
       const s = scenes[i]
       const userMsg = context + "\n\nSCENE " + s.number + " - " + s.title + "\n" + s.description + "\nCharacters: " + (s.characters || []).join(", ") + "\nLocation: " + s.location
       try {
-        const raw = await callAPI(SHOT_PROMPT, userMsg)
+        const raw = await callAPI(SHOT_PROMPT, userMsg, 16384)
         const parsed = parseShot(raw)
         setShots(prev => { const next = prev.map((sh, idx) => idx === i ? { ...sh, status: "done", text: parsed.text, json: parsed.json, errMsg: "" } : sh); persist({ shots: next, step: 4 }); return next })
       } catch (e) {
