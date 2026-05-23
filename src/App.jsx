@@ -107,10 +107,12 @@ start_frame_prompt: The EXACT visual state of frame 1 BEFORE the action begins. 
 
 end_frame_prompt: The EXACT visual state of the last frame AFTER the action resolves WITHIN THIS SAME SHOT. Same framing, same lens, same focal length, same depth of field — only the subject position, lighting state, and emotion have progressed. Describe the positional progression clearly: where the subject moved from and to (e.g. "Start: subject in doorway, hand gripping frame. End: subject at window, palm pressed flat against glass."). Include Seedream keywords: "hyperrealistic, cinematic lighting, 4K texture detail, photorealistic depth of field."
 
+image_to_video_prompt: A Grok Imagine image-to-video prompt (30-60 words). This mode takes a character reference image as the starting frame and animates from it. Do NOT describe the starting visual — the image provides that. Instead describe what HAPPENS: the movement, action, and camera behavior starting from the still image. Follow same audio rules as the video paragraph. End with "cinematic, hyperreal, 4K film grain, 720p."
+
 ---JSON---
 
 The JSON section (raw JSON only — NO backticks, NO preamble, NO markdown code fences):
-{"start_frame_prompt":"...","end_frame_prompt":"...","scene_description":"0-2s: ... 2-5s: ... 5-8s: ...","visual_style":"style keywords and cinematic references","camera_movement":"choreography + intent + framing","main_subject":"subject and action","background_setting":"environment with textures, mood, key objects","lighting_mood":"lighting setup and emotional tone","audio_cue":"ambient layers, specific SFX, music bed","color_palette":"dominant colours with hex codes","dialog":"exact dialogue or None","subtitles":"ON or OFF"}`
+{"start_frame_prompt":"...","end_frame_prompt":"...","image_to_video_prompt":"...","scene_description":"0-2s: ... 2-5s: ... 5-8s: ...","visual_style":"style keywords and cinematic references","camera_movement":"choreography + intent + framing","main_subject":"subject and action","background_setting":"environment with textures, mood, key objects","lighting_mood":"lighting setup and emotional tone","audio_cue":"ambient layers, specific SFX, music bed","color_palette":"dominant colours with hex codes","dialog":"exact dialogue or None","subtitles":"ON or OFF"}`
 
 function parseJSON(raw) {
   let s = raw.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim()
@@ -785,10 +787,10 @@ export default function App() {
                   {isExpanded && canExpand && (
                     <div style={{ borderTop: "1px solid var(--color-border-primary)", padding: 16 }}>
                       <div style={{ display: "flex", gap: 0, marginBottom: 16 }}>
-                        {["images", "video", "json"].map(tab => (
+                         {["images", "video", "image-to-video", "json"].map(tab => (
                           <button key={tab} onClick={(e) => { e.stopPropagation(); setTabs(prev => ({ ...prev, [i]: tab })) }}
                             style={{ background: (tabs[i] || "images") === tab ? amber : "transparent", color: (tabs[i] || "images") === tab ? "#fff" : "var(--color-text-secondary)", border: (tabs[i] || "images") === tab ? "1px solid " + amber : "1px solid var(--color-border-primary)", padding: "6px 16px", borderRadius: 4, fontSize: "0.76rem", fontWeight: 500, cursor: "pointer", fontFamily: "var(--font-sans)" }}>
-                            {tab === "images" ? "Image Prompts" : tab === "video" ? "Video Prompt" : "JSON"}
+                            {tab === "images" ? "Image Prompts" : tab === "video" ? "Video Prompt" : tab === "image-to-video" ? "Image-to-Video" : "JSON"}
                           </button>
                         ))}
                       </div>
@@ -823,6 +825,17 @@ export default function App() {
                           {shot.text
                             ? <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.73rem", color: "var(--color-text-secondary)", lineHeight: 1.9, whiteSpace: "pre-wrap" }}>{shot.text}</div>
                             : <div style={{ fontSize: "0.78rem", color: "var(--color-text-tertiary)", fontStyle: "italic" }}>No video prompt available.</div>}
+                        </div>
+                      )}
+                      {(tabs[i] || "images") === "image-to-video" && (
+                        <div style={{ background: "var(--color-background-secondary)", borderRadius: 8, padding: 14, border: "1px solid var(--color-border-info)" }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                            <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--color-text-info)" }}>GROK IMAGE-TO-VIDEO PROMPT</span>
+                            {shot.json?.image_to_video_prompt && <CopyButton shotKey={"i2v" + i} label="Copy" copied={copied} setCopied={setCopied} text={shot.json.image_to_video_prompt} />}
+                          </div>
+                          {shot.json?.image_to_video_prompt
+                            ? <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.73rem", color: "var(--color-text-secondary)", lineHeight: 1.9, whiteSpace: "pre-wrap" }}>{shot.json.image_to_video_prompt}</div>
+                            : <div style={{ fontSize: "0.78rem", color: "var(--color-text-tertiary)", fontStyle: "italic" }}>Image-to-video prompt unavailable. Regenerate to include it.</div>}
                         </div>
                       )}
                       {(tabs[i] || "images") === "json" && (
