@@ -424,6 +424,8 @@ export default function App() {
   const [regenerateNote, setRegenerateNote] = useState("")
   const [regenerating, setRegenerating] = useState(null)
   const [regenDone, setRegenDone] = useState(null)
+  const [shotRegenIndex, setShotRegenIndex] = useState(null)
+  const [shotRegenNote, setShotRegenNote] = useState("")
   const [projectName, setProjectName] = useState("")
   const [savedProjects, setSavedProjects] = useState(() => {
     try { return Object.keys(JSON.parse(localStorage.getItem("vpv_projects") || "{}")) } catch { return [] }
@@ -464,7 +466,7 @@ export default function App() {
   const resetAll = () => {
     setStep(1); setConcept(""); setScenes([]); setCharacters([]); setLocations([])
     setShots([]); setBusy(false); setLoadMsg(""); setErr(""); setExpanded(null)
-    setTabs({}); setSheetsOpen(false); setCopied(""); setRegenerateInput(null); setRegenerateNote(""); setRegenerating(null); setRegenDone(null); setProjectName("")
+    setTabs({}); setSheetsOpen(false); setCopied(""); setRegenerateInput(null); setRegenerateNote(""); setRegenerating(null); setRegenDone(null); setShotRegenIndex(null); setShotRegenNote(""); setProjectName("")
   }
 
   async function callAPI(system, userMsg, tokens = 8192) {
@@ -591,14 +593,15 @@ export default function App() {
     else { generateAllShots() }
   }
 
-  const retryShot = async (i) => {
+  const retryShot = async (i, instruction = "") => {
     setShots(prev => prev.map((s, idx) => idx === i ? { ...s, status: "loading", errMsg: "" } : s))
     setLoadMsg("Retrying shot " + (i + 1))
     const charSheets = characters.map(c => "[CHARACTER: " + c.name + "]\n" + c.sheet).join("\n\n")
     const locSheets = locations.map(l => "[LOCATION: " + l.name + "]\n" + l.sheet).join("\n\n")
     const context = charSheets + "\n\n" + locSheets
     const s = scenes[i]
-    const userMsg = context + "\n\nSCENE " + s.number + " - " + s.title + "\n" + s.description + "\nCharacters: " + (s.characters || []).join(", ") + "\nLocation: " + s.location
+    let userMsg = context + "\n\nSCENE " + s.number + " - " + s.title + "\n" + s.description + "\nCharacters: " + (s.characters || []).join(", ") + "\nLocation: " + s.location
+    if (instruction) userMsg += "\n\nREGENERATION INSTRUCTIONS: " + instruction
     try {
       const raw = await callAPI(SHOT_PROMPT, userMsg, 16384)
       const parsed = parseShot(raw)
@@ -774,10 +777,22 @@ export default function App() {
                         style={{ background: "transparent", border: "1px solid var(--color-border-danger)", color: "var(--color-text-danger)", padding: "4px 12px", borderRadius: 4, fontSize: "0.75rem", cursor: "pointer", fontFamily: "var(--font-sans)" }}>Retry</button>
                     )}
                     {status === "done" && !busy && (
-                      <button onClick={(e) => { e.stopPropagation(); retryShot(i) }}
+                      <button onClick={(e) => { e.stopPropagation(); setShotRegenIndex(shotRegenIndex === i ? null : i); setShotRegenNote("") }}
                         style={{ background: "transparent", border: "1px solid var(--color-border-primary)", color: "var(--color-text-secondary)", padding: "4px 12px", borderRadius: 4, fontSize: "0.75rem", cursor: "pointer", fontFamily: "var(--font-sans)" }}>&#8635;</button>
                     )}
                   </div>
+                  {shotRegenIndex === i && (
+                    <div style={{ padding: "0 16px 10px", display: "flex", gap: 6 }} onClick={e => e.stopPropagation()}>
+                      <input value={shotRegenNote} onChange={e => setShotRegenNote(e.target.value)} placeholder="Optional: what to change..."
+                        onKeyDown={e => { if (e.key === "Enter") { retryShot(i, shotRegenNote); setShotRegenIndex(null); setShotRegenNote("") } }}
+                        style={{ flex: 1, padding: "4px 8px", borderRadius: 4, border: "1px solid var(--color-border-primary)", background: "var(--color-background-secondary)", color: "var(--color-text-primary)", fontFamily: "var(--font-sans)", fontSize: "0.73rem", outline: "none" }}
+                        autoFocus />
+                      <button onClick={() => { retryShot(i, shotRegenNote); setShotRegenIndex(null); setShotRegenNote("") }}
+                        style={{ background: "#B8942A", color: "#fff", border: "none", padding: "4px 10px", borderRadius: 4, fontSize: "0.73rem", fontWeight: 600, cursor: "pointer", fontFamily: "var(--font-sans)" }}>Go</button>
+                      <button onClick={() => setShotRegenIndex(null)}
+                        style={{ background: "transparent", border: "1px solid var(--color-border-primary)", color: "var(--color-text-secondary)", padding: "4px 8px", borderRadius: 4, fontSize: "0.73rem", cursor: "pointer", fontFamily: "var(--font-sans)" }}>✕</button>
+                    </div>
+                  )}
                   {isExpanded && canExpand && (
                     <div style={{ borderTop: "1px solid var(--color-border-primary)", padding: 16 }}>
                        <div style={{ display: "flex", gap: 0, marginBottom: 16 }}>
