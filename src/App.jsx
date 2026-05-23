@@ -78,9 +78,9 @@ NO headers. NO labels. NO "SECTION 1". NO preamble. NO commentary. NO markdown f
 
 === IMAGE-TO-VIDEO PROMPT — comprehensive, no word cap: ===
 Write ONE flowing paragraph that covers everything Grok Imagine needs. Be specific and thorough — do not summarize. Weave together:
-(1) CHARACTER: The character's appearance from their master sheet — what they look like, what they're wearing, their expression, their posture. Paint a precise visual of the person.
+(1) CHARACTER: The character's appearance from their master sheet — what they look like, what they're wearing. CRITICAL — specify EXACT body posture and positioning: how they are standing/sitting/leaning, where their weight is distributed, what their hands are doing, head angle, shoulder position, spine curvature. Nothing left to chance — "she sits hunched forward, elbows on knees, chin resting on interlaced fingers, right leg crossed over left at the ankle, shoulders tight and raised" NOT "she sits on the couch." Every joint and point of contact with surfaces must be named.
 (2) LOCATION: The setting from the location master sheet — materials, lighting sources, color temperature, key objects, atmosphere. Make the space feel real and lived-in.
-(3) ACTION: What happens moment by moment, starting from the still image. Precision verbs. "Her thumb hesitates over the screen then flicks downward" NOT "she scrolls." Describe micro-movements — hands, eyes, breath, posture shifts. Every beat of motion.
+(3) ACTION & POSTURE PROGRESSION: What happens moment by moment, starting from the still image. Every movement must be traced to a specific body part. Describe EXACTLY how posture shifts: "her spine straightens by an inch, her right shoulder drops, her left hand uncurls from a fist to flat fingers on the table, she shifts her weight from her back foot to her front foot." Precision verbs only — "her thumb hesitates over the screen then flicks downward" NOT "she scrolls." Cover: hands (every finger gesture), eyes (direction, blink rate, focus shifts), breath (depth, pace, visible chest/shoulder movement), posture transitions (spine angle, weight distribution, joint angles). Every beat of motion must be anatomically specific.
 (4) CAMERA: Describe movement naturally — "a slow push-in tightens on her face" or "the frame drifts left to reveal." Use only Grok-compatible moves: slow push-in, gentle pull-back, subtle pan, static lock-off, smooth tracking, subtle handheld. NO whip pans, crash zooms, Dutch angles, or aggressive handheld shake.
 (5) LIGHTING: Source named (practical lamp, window, candle, screen glow, neon, overhead fluorescent), quality (hard/soft), color temperature. Describe how light changes during the shot.
 (6) AUDIO & SOUNDSCAPE (MANDATORY — based on the scene's audio strategy): 
@@ -95,7 +95,8 @@ Write ONE flowing paragraph that covers everything Grok Imagine needs. Be specif
 - Generic lighting ("warm lighting")
 - Camera technique jargon or rubric naming
 - Skipping audio — every shot MUST include audio matching its declared strategy
-- Summarizing — be thorough, not brief
+- Vague posture — never say "sitting on a chair" without describing exactly how (leg position, back angle, arm placement, head tilt)
+- Summarizing — be thorough, anatomically specific, leave nothing to chance
 
 Specific numbers (85mm, f/1.8) are fine — avoid technique labels like "dolly-in," "rack focus," or "Dutch angle."
 
