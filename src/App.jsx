@@ -103,7 +103,7 @@ end_frame_prompt: The EXACT visual state of the last frame AFTER the action reso
 ---JSON---
 
 The JSON section (raw JSON only — NO backticks, NO preamble, NO markdown code fences):
-{"start_frame_prompt":"...","end_frame_prompt":"...","grok_prompt":"The video paragraph exactly as written above, ready for direct Grok Imagine Video API use","scene_description":"0-2s: ... 2-5s: ... 5-8s: ...","visual_style":"style keywords and cinematic references","camera_movement":"choreography + intent + framing","main_subject":"subject and action","background_setting":"environment with textures, mood, key objects","lighting_mood":"lighting setup and emotional tone","audio_cue":"ambient layers, specific SFX, music bed","color_palette":"dominant colours with hex codes","dialog":"exact dialogue or None","subtitles":"ON or OFF"}`
+{"start_frame_prompt":"...","end_frame_prompt":"...","scene_description":"0-2s: ... 2-5s: ... 5-8s: ...","visual_style":"style keywords and cinematic references","camera_movement":"choreography + intent + framing","main_subject":"subject and action","background_setting":"environment with textures, mood, key objects","lighting_mood":"lighting setup and emotional tone","audio_cue":"ambient layers, specific SFX, music bed","color_palette":"dominant colours with hex codes","dialog":"exact dialogue or None","subtitles":"ON or OFF"}`
 
 function parseJSON(raw) {
   let s = raw.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim()
@@ -808,25 +808,14 @@ export default function App() {
                         </div>
                       )}
                       {(tabs[i] || "images") === "video" && (
-                        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                          <div style={{ background: "var(--color-background-secondary)", borderRadius: 8, padding: 14, border: "1px solid var(--color-border-primary)" }}>
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                              <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--color-text-tertiary)" }}>VIDEO PARAGRAPH</span>
-                              {shot.text && <CopyButton shotKey={"tx" + i} label="Copy" copied={copied} setCopied={setCopied} text={shot.text} />}
-                            </div>
-                            {shot.text
-                              ? <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.73rem", color: "var(--color-text-secondary)", lineHeight: 1.9, whiteSpace: "pre-wrap" }}>{shot.text}</div>
-                              : <div style={{ fontSize: "0.78rem", color: "var(--color-text-tertiary)", fontStyle: "italic" }}>No video prompt available.</div>}
+                        <div style={{ background: "var(--color-background-secondary)", borderRadius: 8, padding: 14, border: "1px solid #B8942A" }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                            <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "#B8942A" }}>GROK IMAGINE VIDEO PROMPT</span>
+                            {shot.text && <CopyButton shotKey={"tx" + i} label="Copy" copied={copied} setCopied={setCopied} text={shot.text} />}
                           </div>
-                          {shot.json?.grok_prompt && (
-                            <div style={{ background: "var(--color-background-secondary)", borderRadius: 8, padding: 14, border: "1px solid #B8942A" }}>
-                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                                <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "#B8942A" }}>GROK IMAGINE PROMPT — ready to paste</span>
-                                <CopyButton shotKey={"gp" + i} label="Copy" copied={copied} setCopied={setCopied} text={shot.json.grok_prompt} />
-                              </div>
-                              <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.73rem", color: "var(--color-text-secondary)", lineHeight: 1.9, whiteSpace: "pre-wrap" }}>{shot.json.grok_prompt}</div>
-                            </div>
-                          )}
+                          {shot.text
+                            ? <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.73rem", color: "var(--color-text-secondary)", lineHeight: 1.9, whiteSpace: "pre-wrap" }}>{shot.text}</div>
+                            : <div style={{ fontSize: "0.78rem", color: "var(--color-text-tertiary)", fontStyle: "italic" }}>No video prompt available.</div>}
                         </div>
                       )}
                       {(tabs[i] || "images") === "json" && (
