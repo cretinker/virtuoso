@@ -763,6 +763,10 @@ export default function App() {
                     <div style={badge}>{glyph}</div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--color-text-primary)" }}>Scene {shot.scene.number} - {shot.scene.title}</div>
+                      <div style={{ fontSize: "0.7rem", color: "var(--color-text-tertiary)", marginBottom: 1 }}>
+                        <span>&#128205; {shot.scene.location || "—"}</span>
+                        {(shot.scene.characters || []).length > 0 && <span style={{ marginLeft: 12 }}>&#128101; {(shot.scene.characters || []).join(", ")}</span>}
+                      </div>
                       <div style={{ fontSize: "0.75rem", color: status === "error" ? "var(--color-text-danger)" : "var(--color-text-tertiary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{sub}</div>
                     </div>
                     {status === "error" && !busy && (
