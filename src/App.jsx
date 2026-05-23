@@ -38,7 +38,7 @@ For each significant recurring character, write ONE dense descriptive paragraph 
 - Distinguishing marks (ONLY IF SPECIFICALLY MENTIONED IN THE CONCEPT — if the concept does not describe a scar, mole, tattoo, or birthmark, DO NOT invent one; most people do not have visible distinguishing marks, so omit this section entirely unless the character's story explicitly includes one)
 - Clothing visible in frame: describe ONLY the collar, neckline, lapels, upper chest garment, and visible accessories like earrings or necklaces. The garment's fabric, color, texture, and cut around the shoulders/collar area. Do NOT describe pants, shoes, belts, or full garment length since they are outside the frame.
 
-End every character sheet with a Seedream 5.0 style tag that MATCHES THE CONCEPT'S VISUAL STYLE. If the concept specifies pixel art, use "pixel art portrait, crisp edges, limited palette." If anime, use "anime portrait, cel-shaded, clean linework." If photorealistic, use "hyperrealistic portrait photography, soft studio lighting, shallow depth of field f/1.8, 85mm lens, 4K skin texture, photorealistic." Derive the tag from the concept — do NOT default to photorealistic unless the concept calls for it.
+End every character sheet with a Seedream 5.0 style tag that MATCHES THE CONCEPT'S VISUAL STYLE. If no style is specified in the concept, default to "cinematic portrait photography, natural lighting, shallow depth of field f/1.8, 85mm lens, 4K skin texture." If the concept specifies pixel art, use "pixel art portrait, crisp edges, limited palette." If anime, use "anime portrait, cel-shaded, clean linework." Derive from the concept.
 
 DO NOT include: personality traits, emotional state, backstory, what the character does, their job, their motivation, vocal description, or anything not visible in a still image.
 
@@ -55,7 +55,7 @@ For each significant recurring setting:
 - Mood and atmosphere, key objects, set dressing details
 - Ambient soundscape: what you'd hear standing in this space
 
-End every location sheet with a Seedream 5.0 style tag that MATCHES THE CONCEPT'S VISUAL STYLE. If pixel art, use "pixel art environment, crisp edges, limited palette." If anime, use "anime background art, cel-shaded, clean linework." If photorealistic, use "architectural photography, hyperrealistic interior, 24mm wide lens, ambient lighting, 4K material texture, photorealistic depth of field." Derive the tag from the concept — do NOT default to photorealistic unless the concept calls for it.
+End every location sheet with a Seedream 5.0 style tag that MATCHES THE CONCEPT'S VISUAL STYLE. If no style is specified in the concept, default to "cinematic architectural photography, 24mm wide lens, natural ambient lighting, 4K material texture." If pixel art, use "pixel art environment, crisp edges, limited palette." If anime, use "anime background art, cel-shaded, clean linework." Derive from the concept.
 
 CRITICAL JSON RULE: The sheet text is a JSON string value. You MUST escape any double-quote characters inside the sheet description as \\". Never use unescaped double quotes within the sheet text.
 
@@ -88,7 +88,7 @@ Write ONE flowing paragraph that covers everything Grok Imagine needs. Be specif
     - If audio strategy is "dialogue": write EXACT dialogue words in quotes for each character with delivery notes.
     - If audio strategy is "voiceover+dialogue": include both.
     - If audio strategy is "ambient": no spoken words. Describe 2+ environmental sounds with spatial placement.
-(7) END TAG: A quality/style tag matching the concept's visual direction — "cinematic, hyperreal, 4K film grain, 720p" for photorealistic, "pixel art, crisp, 720p" for pixel art, "anime, cel-shaded, 720p" for anime, etc. Derive from the concept, never default to photorealistic. This MUST appear at the end.
+(7) END TAG: A quality/style tag matching the concept's visual direction. If no style specified, default to "cinematic, natural lighting, 4K film grain, 720p." If pixel art: "pixel art, crisp, 720p." If anime: "anime, cel-shaded, 720p." Derive from the concept. This MUST appear at the end.
 
 === FORBIDDEN: ===
 - "The shot opens on..." or "The shot begins..."
