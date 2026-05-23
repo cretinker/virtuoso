@@ -78,14 +78,18 @@ Drop directly into the visual. No "the shot opens with." Weave these elements in
 (2) CAMERA: Describe movement naturally — "a slow push-in tightens on her face" or "the frame drifts left to reveal" — not "dolly-in technique." Use only Grok-compatible moves: slow push-in, gentle pull-back, subtle pan, static lock-off, smooth tracking, subtle handheld. NO whip pans, crash zooms, Dutch angles, or aggressive handheld shake.
 (3) ACTION: What happens moment by moment. Precision verbs. "Her thumb hesitates over the screen then flicks downward" NOT "she scrolls." Describe micro-movements — hands, eyes, breath, posture shifts.
 (4) LIGHTING: Source named (practical lamp, window, candle, screen glow, neon, overhead fluorescent), quality (hard/soft), color temperature. Describe how light changes during the shot.
-(5) AUDIO: 2+ specific diegetic sounds with spatial placement. Dialogue in quotes if present.
-(6) END TAG: "cinematic, hyperreal, 4K film grain, 720p" — this MUST appear at the end.
+(5) AUDIO & SOUNDSCAPE (MANDATORY — every shot MUST include audio): Weave in at least 2 of:
+    - Diegetic sounds with spatial placement: "the soft plastic click of a phone case from frame left," "distant muffled laughter bleeding through the wall"
+    - Dialogue or voice-over: if the scene has speaking, include EXACT words in quotes — "I've been waiting for this" — spoken by the named character
+    - Ambient atmosphere: room tone, weather, machinery hum, crowd murmur, nature sounds — named and placed in the space
+    (6) END TAG: "cinematic, hyperreal, 4K film grain, 720p" — this MUST appear at the end.
 
 === FORBIDDEN: ===
 - "The shot opens on..." or "The shot begins..."
 - Generic lighting ("warm lighting")
 - Camera technique jargon or rubric naming
 - Writing more than 120 words
+- Skipping audio entirely — every shot MUST have sound
 
 Specific numbers (85mm, f/1.8) are fine — avoid technique labels like "dolly-in," "rack focus," or "Dutch angle."
 
