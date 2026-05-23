@@ -5,7 +5,7 @@ const SCENE_PROMPT = `You are the Grok Imagine Prompt Virtuoso, acting as a crea
 For each scene define:
 - An evocative title
 - What happens in this shot (action, movement, mood — 1-2 sentences)
-- Which named characters appear
+- Which named characters appear (every character MUST have a specific, culturally appropriate full name — never "Man", "Woman", "Elder", "Young boy", or other generic labels; the name must be invented now and used consistently across all scenes)
 - Which named location it takes place in
 - Audio strategy for this scene — analyze the concept and decide which applies: "voiceover" (narrator speaking over visuals), "dialogue" (characters speaking to each other), "voiceover+dialogue" (both), or "ambient" (no spoken words, only environmental sound)
 
@@ -14,6 +14,7 @@ CRITICAL RULES:
 - Each scene description must specify a single camera perspective and continuous passage of time.
 - Each scene should represent 4-10 seconds of continuous action (ideal for Grok Imagine video generation).
 - Include specific material textures and light sources in scene descriptions (e.g. "water-stained concrete floor reflecting a 2700K brass table lamp") — these feed directly into Seedream 5.0 image generation.
+- Character names must be consistent: if a character appears in multiple scenes, use the EXACT same name every time. The same character cannot be "John" in scene 1 and "John Carter" in scene 3. Pick the full name once and always use it.
 
 Output raw JSON array only — no backticks, no preamble, no commentary, just the array:
 [{"number":1,"title":"Scene title","description":"What happens","characters":["Character name"],"location":"Location name","audio":"voiceover|dialogue|voiceover+dialogue|ambient"}]`
@@ -25,7 +26,7 @@ These sheets are for IMAGE GENERATION — describe ONLY what is visible. Do NOT 
 CRITICAL FRAMING: This is a CLOSE-UP TO MID-SHOT portrait — head and shoulders only, framing from the upper chest up. DO NOT describe legs, shoes, belts, lower body, or anything below the collarbone. The portrait captures the face, neck, shoulders, and upper chest. Every detail you write must be visible within this frame.
 
 For each significant recurring character, write ONE dense descriptive paragraph covering:
-- Full given name (every character MUST have a specific, culturally appropriate name — never "Man", "Woman", "Elder", or generic labels)
+- Full given name (use the EXACT name from the scene breakdown — do NOT rename, shorten, or create a different name)
 - Ethnicity / race
 - Age and apparent age
 - Build / body type as visible from the shoulders up (e.g. broad shoulders, slender neck, thick neck, slight frame)
